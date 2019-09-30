@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "module": "es2015",
+    "outDir": "./out",
+    "strict": true
+  },
+  "files": [
+    "index.ts"
+  ]
+}
