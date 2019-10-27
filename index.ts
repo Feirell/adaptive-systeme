@@ -12,7 +12,9 @@ function createTSPWithRandomPoints(countNodes: number, width: number, height: nu
   return new TSPMap(nodes);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+const createTimeout = (ms: number) => new Promise((res, rej) => setTimeout(res, ms));
+
+document.addEventListener('DOMContentLoaded', async () => {
   const svg = document.getElementsByTagName('svg')[0];
 
   const renderer = new Renderer(svg);
@@ -27,21 +29,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const markA = 'before-brute';
   const markB = 'after-brute';
-  const markC = 'after-render'
 
   performance.mark(markA);
-  const bestRoute = tsp.getBestRouteBruteForce();
+  let bestRoute;
+  // for (bestRoute of tsp.getBestRouteBruteForce()) {
+  for (bestRoute of tsp.getHillClimbedRoute()) {
+    renderer.render(bestRoute);
+    console.count('render')
+    await createTimeout(0);
+  }
   performance.mark(markB);
-  renderer.render(bestRoute);
-  performance.mark(markC);
 
   performance.measure('bruteforce', markA, markB);
-  performance.measure('render', markB, markC);
 
   logPerformanceEntryByName("bruteforce");
-  logPerformanceEntryByName("render");
 
-  // Finally, clean up the entries.
   performance.clearMarks();
   performance.clearMeasures();
 });

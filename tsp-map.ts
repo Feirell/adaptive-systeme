@@ -1,63 +1,31 @@
-import { randomInt } from "./random-int.js";
+import { HillClimber } from "./hill-climb.js";
 import { TSPNode } from "./tsp-node.js";
+import { getPathLength, fisherYatesShuffle, getCombinationOnlyUnique } from './helper.js';
 
-function fisherYatesShuffle<T>(arr: T[]) {
-  const copy = Array.from(arr);
-
-  for (let i = 0; i < copy.length - 2; i++) {
-    const j = randomInt(i, copy.length);
-    const t = copy[i];
-    copy[i] = copy[j];
-    copy[j] = t;
-  }
-
-  return copy;
-}
-
-function* getCombinationOnlyUnique<T>(elements: T[], lengthOfCombination: number = elements.length): Generator<T[]> {
-  for (let i = 0; i < elements.length; i++) {
-    const copy = elements.slice(0);
-    const current = copy.splice(i, 1)[0];
-
-    if (lengthOfCombination > 1)
-      for (const combination of getCombinationOnlyUnique(copy, lengthOfCombination - 1)) {
-        yield [current, ...combination];
-      }
-    else
-      yield [current];
-  }
-}
-
+/*
 class ValueCache {
   constructor(
     private readonly valueAmount: number
   ) {
     if ((valueAmount | 0) !== valueAmount || valueAmount < 1)
       throw new Error('valueAmount needs to be an integer greater than or equal to 1');
-
   }
 
+  // set(...keys:) {
 
+  // }
 }
+*/
 
-function getDistance(a: TSPNode, b: TSPNode): number {
-  const { abs, pow, sqrt } = Math;
-  return sqrt(pow(abs(a.x - b.x), 2) + pow(abs(a.y - b.y), 2))
-}
+function pathEqual(pathA: TSPNode[], pathB: TSPNode[]) {
+  if (pathA.length != pathB.length)
+    return false;
 
-function getPathLength(nodes: TSPNode[]): number {
-  let length = 0;
+  for (let i = 0; i < pathA.length; i++)
+    if (pathA[i].name != pathB[i].name)
+      return false;
 
-  if (nodes.length > 1) {
-    let last: TSPNode = nodes[0];
-    for (const n of nodes.slice(1)) {
-      length += getDistance(last, n);
-      last = n;
-    }
-    length += getDistance(nodes[0], last);
-  }
-
-  return length;
+  return true;
 }
 
 export class TSPMap {
@@ -69,7 +37,7 @@ export class TSPMap {
     return fisherYatesShuffle(this.nodes);
   }
 
-  getBestRouteBruteForce() {
+  *getBestRouteBruteForce() {
     let shortestLength: number | null = null;
     let shortestPath: TSPNode[] = [];
 
@@ -79,9 +47,32 @@ export class TSPMap {
       if (!shortestLength || shortestLength > length) {
         shortestLength = length;
         shortestPath = variation;
+        yield variation;
       }
     }
 
     return shortestPath;
+  }
+
+  *getHillClimbedRoute(equalCountAbort = 50) {
+    const hc = new HillClimber(this.nodes);
+
+    let best = hc.stepHillClimbing();
+    let prev = best;
+
+    let equalCount = 0;
+
+    while (equalCount < equalCountAbort) {
+      const current = hc.stepHillClimbing();
+      // console.log(current, prev);
+      if (pathEqual(current, prev))
+        equalCount++;
+      else {
+        equalCount = 0;
+        yield best = current;
+      }
+    }
+
+    return best;
   }
 }
