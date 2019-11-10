@@ -1,9 +1,18 @@
 {
+  "scripts": {
+    "start": "parcel index.html"
+  },
   "dependencies": {
-    "parcel": "^1.12.3",
+    "parcel": "^1.12.4",
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
     "typescript": "^3.6.3"
   },
+  "devDependencies": {
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.11"
+  },
   "browserslist": [
-    "last 1 Chrome version"
+    "last 1 chrome version"
   ]
 }

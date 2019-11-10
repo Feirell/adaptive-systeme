@@ -1,7 +1,8 @@
-import { TSPNode } from './tsp-node.js';
+import { PRNG } from './path-creator/prng';
+import { TSPNode } from './tsp-node';
 
+const { abs, pow, sqrt } = Math;
 export function getDistance(a: TSPNode, b: TSPNode): number {
-  const { abs, pow, sqrt } = Math;
   return sqrt(pow(abs(a.x - b.x), 2) + pow(abs(a.y - b.y), 2))
 }
 
@@ -10,7 +11,8 @@ export function getPathLength(nodes: TSPNode[]): number {
 
   if (nodes.length > 1) {
     let last: TSPNode = nodes[0];
-    for (const n of nodes.slice(1)) {
+    for (let i = 1; i < nodes.length; i++) {
+      const n = nodes[i];
       length += getDistance(last, n);
       last = n;
     }
@@ -20,13 +22,11 @@ export function getPathLength(nodes: TSPNode[]): number {
   return length;
 }
 
-import { randomInt } from "./random-int.js";
-
-export function fisherYatesShuffle<T>(arr: T[]) {
+export function fisherYatesShuffle<T>(arr: T[], prng: PRNG) {
   const copy = Array.from(arr);
 
   for (let i = 0; i < copy.length - 2; i++) {
-    const j = randomInt(i, copy.length);
+    const j = prng.randomInteger(i, copy.length);
     const t = copy[i];
     copy[i] = copy[j];
     copy[j] = t;
@@ -47,4 +47,31 @@ export function* getCombinationOnlyUnique<T>(elements: T[], lengthOfCombination:
     else
       yield [current];
   }
+}
+
+export function pathEqual(pathA: TSPNode[], pathB: TSPNode[]) {
+  if (pathA.length != pathB.length)
+    return false;
+
+  for (let i = 0; i < pathA.length; i++)
+    if (pathA[i].name != pathB[i].name)
+      return false;
+
+  return true;
+}
+
+export function switchRandomTwo<T>(arr: T[], prng?: PRNG) {
+  if (!prng)
+    prng = new PRNG(Math.random() * Number.MAX_SAFE_INTEGER);
+
+  arr = arr.slice(0);
+
+  const a = prng.randomInteger(0, arr.length);
+  const b = prng.randomIntegerExcept(0, arr.length, a);
+
+  const tmp = arr[a];
+  arr[a] = arr[b];
+  arr[b] = tmp;
+
+  return arr;
 }

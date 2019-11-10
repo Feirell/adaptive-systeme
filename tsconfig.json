@@ -3,9 +3,11 @@
     "target": "ES2017",
     "module": "es2015",
     "outDir": "./out",
-    "strict": true
+    "strict": true,
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true
   },
   "files": [
-    "index.ts"
+    "src/index.ts"
   ]
 }

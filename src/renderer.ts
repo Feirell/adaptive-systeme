@@ -1,4 +1,4 @@
-import { TSPNode } from "./tsp-node.js";
+import { TSPNode } from "./tsp-node";
 
 export class Renderer {
   constructor(
