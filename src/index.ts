@@ -122,7 +122,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 render(main, tsp, algorithms);
             },
-            ({ path, ts }) => (ourRepresentation as any).finishTime = ts
+            ({ path, ts }) => {
+                (ourRepresentation as any).finishTime = ts;
+                render(main, tsp, algorithms);
+            }
         );
     }
 });
