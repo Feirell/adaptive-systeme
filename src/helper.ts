@@ -1,4 +1,4 @@
-import { PRNG } from './path-creator/prng';
+import { PRNG } from './prng';
 import { TSPNode } from './tsp-node';
 
 const { abs, pow, sqrt } = Math;

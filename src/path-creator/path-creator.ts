@@ -1,5 +1,9 @@
 import { TSPNode } from '../tsp-node';
 
+export interface PathCreatorConstructor {
+  new(nodes: TSPNode[], tries: number): PathCreator
+}
+
 export abstract class PathCreator implements Iterable<TSPNode[]>, Iterator<TSPNode[]> {
 
   protected calls = [];

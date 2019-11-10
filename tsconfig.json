@@ -5,7 +5,8 @@
     "outDir": "./out",
     "strict": true,
     "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "jsx": "react"
   },
   "files": [
     "src/index.ts"

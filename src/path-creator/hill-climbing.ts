@@ -1,7 +1,7 @@
 import { PathCreator } from "./path-creator";
 import { TSPNode } from "../tsp-node";
 import { getPathLength, switchRandomTwo } from '../helper';
-import { PRNG } from "./prng";
+import { PRNG } from "../prng";
 
 abstract class HillClimber<T, F> {
   private finishedFlag = false;

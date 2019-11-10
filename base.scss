@@ -1,0 +1,56 @@
+body {
+  margin: 0px;
+}
+
+body,
+html {
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  & > main {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+}
+
+.implementation-display {
+  font-size: 1.3em;
+  margin: 10px;
+  display: flex;
+  // TODO fix that height does not need to be static anymore
+  max-height: 400px;
+  overflow: hidden;
+
+  .sidebar {
+    width: 150px;
+    // width: min-content;
+
+    display: flex;
+    flex-direction: column;
+
+    .meta {
+      margin-bottom: 10px;
+    }
+
+    .improvement-timeline {
+      // TODO fix chrome firefox difference (scrollbar y results in scrollbar x in firefox)
+      padding-right: 17px;
+      overflow-y: auto;
+    }
+  }
+}
+
+.improvement {
+  font-size: 0.6em;
+  &:not(:first-child) {
+    margin-top: 8px;
+  }
+
+  // margin
+}

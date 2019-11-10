@@ -1,101 +1,128 @@
+import { render } from './renderer';
+import { PRNG } from './prng';
+import { TSPNode } from './tsp-node';
 
-// const c = (function* () {
-//   yield 1;
-//   yield 2;
-//   yield 3;
-// })();
+import { WorkerHelper } from './worker-helper';
 
-// const c: Generator<number> & { count: number } = {
-//   count: 0,
-//   next(...args: any) {
-//     console.log('next was called with', [...arguments]);
-//     return {
-//       value: this.count++,
-//       done: false
-//     }
-//   },
-//   return(value: number) {
-//     console.log('return was called with', [...arguments]);
-//     return {
-//       done: false,
-//       value: -1
-//     };
-//   },
-//   throw(ex: any) {
-//     console.log('throw was called with', [...arguments]);
-//     return {
-//       done: false,
-//       value: (undefined) as any as number
-//     }
-//   },
-//   [Symbol.iterator]() { return this; }
-// }
+interface ProcessListener { (ev: { path: TSPNode[], ts: number }): void }
 
-// for (const elem of c) {
-//   console.log('elem', elem);
-//   break;
-// }
+async function loadAndStart(creator: string, nodes: TSPNode[], tries: number, progressListener: ProcessListener, finishedListener: ProcessListener) {
+    const worker = new Worker('./worker.ts');
+    const wh = new WorkerHelper(worker);
+    await wh.ready;
+    wh.sendMessage('create', { nodes, tries, creator })
 
-// for (const elem of c) {
-//   console.log('elem', elem);
-//   break;
-// }
+    let best: TSPNode[] = undefined as any;
 
-// for (const elem of c) {
-//   console.log('elem', elem);
-//   break;
-// }
+    while (true) {
+        const msg = await wh.waitForAnyMessage();
 
-// c.return();
+        if (msg.channel != 'normal')
+            if (msg.channel == 'error')
+                throw new Error('received error message: ' + JSON.stringify(msg));
+            else console.info('received non normal message', msg);
+        else
+            switch (msg.type) {
+                case 'progressed':
+                    best = msg.payload;
+                    progressListener({ path: best, ts: msg.timestamp });
+                    break;
 
-// import { BruteForce } from './path-creator/brute-force';
-// import { HillClimbing } from './path-creator/hill-climbing';
-// import { Renderer } from './renderer';
-// import { PRNG } from './path-creator/prng';
-// import { TSPNode } from './tsp-node';
-// import { getPathLength } from './helper';
+                case 'finished':
+                    finishedListener({ path: best, ts: msg.timestamp });
+                    worker.terminate();
+                    return;
 
-// function createTSPWithRandomPoints(countNodes: number, width: number, height: number, prng?: PRNG) {
-//   if (!prng)
-//     prng = new PRNG(0x124432);
+                default:
+                    throw new Error('received message which was not mapped ' + msg.type);
+            }
+    }
+}
 
-//   const nodes = [];
-//   for (let i = 0; i < countNodes; i++)
-//     nodes.push(new TSPNode("Node#" + i, prng.randomInteger(0, width), prng.randomInteger(0, height)));
+const indexToLetter = (index: number, start = 'A') => String.fromCharCode(start.charCodeAt(0) + index);
 
-//   return nodes;
-// }
+function createTSPWithRandomPoints(countNodes: number, width: number, height: number, prng?: PRNG) {
+    if (!prng)
+        prng = new PRNG(0x76AFF32);
+    // prng = new PRNG(Math.random() * Number.MAX_SAFE_INTEGER);
+
+    const nodes = [];
+    for (let i = 0; i < countNodes; i++)
+        nodes.push(new TSPNode(indexToLetter(i), prng.randomInteger(0, width), prng.randomInteger(0, height)));
+
+    return nodes;
+}
 
 // const createTimeout = (ms: number) => new Promise((res, rej) => setTimeout(res, ms));
-
+// const free = () => new Promise(res => setTimeout(res));
 // const waitForFrame = () => new Promise(res => requestAnimationFrame(res));
+// const awaitClick = () => new Promise(res => addEventListener('click', res));
 
-// document.addEventListener('DOMContentLoaded', async () => {
-//   const svg = document.getElementsByTagName('svg')[0];
+// const FrameCounter = (() => {
+//     let frameNumber = 0;
 
-//   const renderer = new Renderer(svg);
+//     (async () => {
+//         while (true) {
+//             frameNumber++;
+//             await waitForFrame();
+//         }
+//     })();
 
-//   const width = 400;
-//   const height = 400;
+//     return class FrameCounter {
+//         private lastFrame?: number = undefined;
+//         public get currentFrame() { return frameNumber; }
+//         isDifferent() {
+//             const r = this.lastFrame != this.currentFrame;
+//             this.lastFrame = this.currentFrame;
+//             return r;
+//         }
+//     }
+// })();
 
-//   svg.setAttribute('width', width + 'px');
-//   svg.setAttribute('height', height + 'px');
+export interface Improvement {
+    timestamp: number;
+    path: TSPNode[];
+}
 
-//   const tsp = createTSPWithRandomPoints(10, width, height);
+export interface AlgorithmProgress {
+    name: string;
+    startTime: number;
+    finishTime: undefined | number;
+    steps: Improvement[];
+}
 
-//   let bestRoute;
-//   // for (bestRoute of tsp.getBestRouteBruteForce()) {
-//   const processor = new HillClimbing(tsp, 1000);
-//   // const processor = new BruteForce(tsp, 5000);
-//   let pathImprovements = 0;
-//   for (bestRoute of processor) {
-//     renderer.render(bestRoute);
-//     pathImprovements++;
-//     console.log('found better route:', getPathLength(bestRoute));
-//     await createTimeout(250);
-//     // await waitForFrame();
-//   }
+const width = 400;
+const height = 400;
 
-//   console.log(getPathLength(bestRoute));
-//   console.log('had %d pathImprovements', pathImprovements);
-// });
+document.addEventListener('DOMContentLoaded', async () => {
+    const tsp = createTSPWithRandomPoints(10, width, height);
+
+    // for (bestRoute of tsp.getBestRouteBruteForce()) {
+
+    const tries = 100000;
+    // await awaitClick();
+    const main = document.body.children[0] as HTMLElement;
+    const algorithms: AlgorithmProgress[] = [];
+    const startTime = Date.now();
+    for (const processor of [
+        'BruteForce',
+        'HillClimbing'
+    ]) {
+        let improvements: Improvement[] = [{ path: tsp, timestamp: startTime }];
+        const ourRepresentation = { name: processor, startTime, finishTime: undefined, steps: improvements };
+        algorithms.push(ourRepresentation);
+
+        render(main, tsp, algorithms);
+
+        loadAndStart(processor, tsp, tries,
+            ({ path, ts }) => {
+                improvements.push({
+                    path, timestamp: ts
+                });
+
+                render(main, tsp, algorithms);
+            },
+            ({ path, ts }) => (ourRepresentation as any).finishTime = ts
+        );
+    }
+});
