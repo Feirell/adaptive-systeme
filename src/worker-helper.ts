@@ -5,7 +5,26 @@ export interface WorkerMessage<Payload> {
     timestamp: number
 }
 
+export interface TransferError {
+    message: string,
+    stack: string,
+    name: string
+}
 
+const makeObjectSimple = (val: any): any => {
+    if (val instanceof Error) {
+        return { message: val.message, stack: val.stack, name: val.name };
+    } else if (typeof val == 'object') {
+        const str = JSON.stringify(val, (key, value) => value == val ? value : makeObjectSimple(value));
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            console.error('could not parse:', str, 'from', val);
+            return val;
+        }
+    } else
+        return val;
+}
 
 export class WorkerHelper<Payload = any> {
     public readonly ready = this.expectType('ready');
@@ -65,13 +84,13 @@ export class WorkerHelper<Payload = any> {
         this.worker.postMessage({
             channel,
             type,
-            payload,
+            payload: makeObjectSimple(payload),
             timestamp: Date.now()
         } as WorkerMessage<any>)
     }
 
-    sendError(error: string) {
-        this.sendMessage(error, undefined, 'error');
+    sendError(error: string, err?: any) {
+        this.sendMessage(error, err, 'error');
     }
 
     private sendControl(type: string) {

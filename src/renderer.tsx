@@ -93,7 +93,7 @@ function Improvement({ improvement }: { improvement: Improvement }) {
 }
 
 function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: TSPNode[], algorithm: AlgorithmProgress }) {
-  const lastImprovement = algorithm.steps[algorithm.steps.length - 1];
+  const lastImprovement = algorithm.steps.get(algorithm.steps.length - 1);
 
   const finished = algorithm.finishTime != undefined;
   const finishedClass = finished ? ' finished' : '';
@@ -118,7 +118,7 @@ function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: 
         <div><span>Fertig:</span><span>{finished ? 'ja' : 'nein'}</span></div>
       </div>
       <div className="improvement-timeline">
-        {algorithm.steps.map((p, i) => <Improvement key={i} improvement={p} />)}
+        {[...algorithm.steps].map((p) => <Improvement key={p.index} improvement={p} />)}
       </div>
     </div>
   </div>

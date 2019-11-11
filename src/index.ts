@@ -1,10 +1,22 @@
+import { RingBuffer } from './ring-buffer';
+import { Error as ChainableError } from 'chainable-error';
 import { render } from './renderer';
 import { PRNG } from './prng';
 import { TSPNode } from './tsp-node';
 
-import { WorkerHelper } from './worker-helper';
+import { WorkerHelper, TransferError } from './worker-helper';
 
 interface ProcessListener { (ev: { path: TSPNode[], ts: number }): void }
+
+const isTransferError = (val: any): val is TransferError => typeof val == 'object' && 'name' in val && 'stack' in val && 'message' in val;
+const transferErrorToRealError = (te: TransferError) => {
+    const err = new Error()
+    err.message = te.message;
+    err.name = te.name;
+    err.stack = te.stack;
+
+    return err;
+}
 
 async function loadAndStart(creator: string, nodes: TSPNode[], tries: number, progressListener: ProcessListener, finishedListener: ProcessListener) {
     const worker = new Worker('./worker.ts');
@@ -16,10 +28,16 @@ async function loadAndStart(creator: string, nodes: TSPNode[], tries: number, pr
 
     while (true) {
         const msg = await wh.waitForAnyMessage();
-
         if (msg.channel != 'normal')
-            if (msg.channel == 'error')
-                throw new Error('received error message: ' + JSON.stringify(msg));
+            if (msg.channel == 'error') {
+                const error = isTransferError(msg.payload) ?
+                    transferErrorToRealError(msg.payload) : msg.payload;
+
+                if (isTransferError(msg.payload) && ChainableError == Error)
+                    throw error;
+                else
+                    throw new ChainableError('received error message from creator ' + creator, error);
+            }
             else console.info('received non normal message', msg);
         else
             switch (msg.type) {
@@ -84,48 +102,68 @@ export interface Improvement {
     path: TSPNode[];
 }
 
+export interface ImprovementWithIndex extends Improvement {
+    index: number
+}
+
 export interface AlgorithmProgress {
     name: string;
     startTime: number;
     finishTime: undefined | number;
-    steps: Improvement[];
+    steps: RingBuffer<ImprovementWithIndex>;
 }
 
 const width = 400;
 const height = 400;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const tsp = createTSPWithRandomPoints(10, width, height);
+    const tsp = createTSPWithRandomPoints(15, width, height);
+    let shouldRender = true;
+
+    const renderLoop = () => {
+        if (shouldRender) {
+            shouldRender = false;
+            render(main, tsp, algorithms);
+        }
+
+
+        requestAnimationFrame(renderLoop);
+    };
+
+    requestAnimationFrame(renderLoop);
 
     // for (bestRoute of tsp.getBestRouteBruteForce()) {
 
-    const tries = 100000;
+    const tries = 10 ** 7;
     // await awaitClick();
     const main = document.body.children[0] as HTMLElement;
     const algorithms: AlgorithmProgress[] = [];
     const startTime = Date.now();
     for (const processor of [
         'BruteForce',
-        'HillClimbing'
+        'HillClimbing',
+        'SimpleEA'
     ]) {
-        let improvements: Improvement[] = [{ path: tsp, timestamp: startTime }];
+        let improvement = 0;
+        let improvements = new RingBuffer<ImprovementWithIndex>(100);
+        improvements.push({ path: tsp, timestamp: startTime, index: improvement });
         const ourRepresentation = { name: processor, startTime, finishTime: undefined, steps: improvements };
         algorithms.push(ourRepresentation);
 
-        render(main, tsp, algorithms);
+        shouldRender = true;
 
         loadAndStart(processor, tsp, tries,
             ({ path, ts }) => {
                 improvements.push({
-                    path, timestamp: ts
+                    path, timestamp: ts, index: ++improvement
                 });
 
-                render(main, tsp, algorithms);
+                shouldRender = true;
             },
             ({ path, ts }) => {
                 (ourRepresentation as any).finishTime = ts;
-                render(main, tsp, algorithms);
+                shouldRender = true;
             }
-        );
+        ).catch(console.error);
     }
 });

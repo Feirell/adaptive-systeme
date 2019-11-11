@@ -3,6 +3,7 @@
     "start": "parcel index.html"
   },
   "dependencies": {
+    "chainable-error": "^1.0.1",
     "parcel": "^1.12.4",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",

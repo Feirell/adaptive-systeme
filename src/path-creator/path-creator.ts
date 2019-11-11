@@ -1,4 +1,5 @@
 import { TSPNode } from '../tsp-node';
+import { PRNG } from '../prng';
 
 export interface PathCreatorConstructor {
   new(nodes: TSPNode[], tries: number): PathCreator
@@ -10,7 +11,8 @@ export abstract class PathCreator implements Iterable<TSPNode[]>, Iterator<TSPNo
 
   constructor(
     protected availableNodes: TSPNode[],
-    protected readonly numberOfTries: number
+    protected readonly numberOfTries: number,
+    protected readonly prng = new PRNG(0x223812FF)
   ) {
     this.setAvailableNodes(availableNodes);
   }
