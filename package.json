@@ -1,6 +1,7 @@
 {
   "scripts": {
-    "start": "parcel index.html"
+    "start": "parcel index.html",
+    "prod": "parcel build index.html --no-source-maps"
   },
   "dependencies": {
     "chainable-error": "^1.0.1",
