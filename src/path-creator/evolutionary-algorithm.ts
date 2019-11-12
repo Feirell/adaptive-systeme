@@ -80,6 +80,7 @@ abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> extends P
 
 
 export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
+    public static readonly processorName = "SimpleEA";
     protected readonly childrenSize = (this.populationSize * 0.75) | 0;
 
     protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {

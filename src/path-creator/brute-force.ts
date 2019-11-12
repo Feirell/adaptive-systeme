@@ -3,6 +3,8 @@ import { PathCreator } from './path-creator';
 import { getPathLength, getCombinationOnlyUnique } from '../helper';
 
 export class BruteForce extends PathCreator {
+  public static readonly processorName = "BruteForce";
+
   private readonly allCombination = getCombinationOnlyUnique(this.availableNodes);
   private shortestLength: number;
   private shortestPath: TSPNode[];

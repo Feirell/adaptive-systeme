@@ -64,7 +64,7 @@ class TSPHillClimber extends HillClimber<TSPNode[], number>{
 }
 
 export class HillClimbing extends PathCreator {
-
+  public static readonly processorName = "HillClimbing";
   private hillClimber!: TSPHillClimber;
 
   setAvailableNodes(nodes: TSPNode[]) {

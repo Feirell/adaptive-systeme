@@ -12,10 +12,10 @@ const processors = new Map<string, PathCreatorConstructor>();
 for (const module of Object.values(modules))
     for (const processor of Object.values(module))
         if (typeof processor == 'function')
-            if (processors.has(processor.name))
-                throw new Error('processor ' + processor.name + 'was already registered');
+            if (processors.has(processor.processorName))
+                throw new Error('processor ' + processor.processorName + 'was already registered');
             else
-                processors.set(processor.name, processor);
+                processors.set(processor.processorName, processor);
 
 const waitMs = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -27,7 +27,7 @@ const wh = new WorkerHelper();
     const { creator, nodes, tries } = createMessage.payload;
 
     if (!processors.has(creator)) {
-        wh.sendMessage('creator-not-found');
+        wh.sendError('creator-not-found', 'creator ' + creator + ', only loaded ' + [...processors.keys()].join(', '));
         return;
     }
 
