@@ -4,7 +4,7 @@ node_js:
 install:
   - yarn
 script:
-  - yarn prod --public-url ./
+  - yarn prod
 deploy:
   provider: pages
   skip_cleanup: true
