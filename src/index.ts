@@ -1,3 +1,4 @@
+import { seedInputHelper } from './seed-helper';
 import { RingBuffer } from './ring-buffer';
 import { Error as ChainableError } from 'chainable-error';
 import { render } from './renderer';
@@ -18,8 +19,18 @@ const transferErrorToRealError = (te: TransferError) => {
     return err;
 }
 
+let runningWorker: Worker[] = [];
+
+const terminateAllWorker = () => {
+    for (const worker of runningWorker)
+        worker.terminate();
+
+    runningWorker = [];
+}
+
 async function loadAndStart(creator: string, nodes: TSPNode[], tries: number, progressListener: ProcessListener, finishedListener: ProcessListener) {
     const worker = new Worker('./worker.ts');
+    runningWorker.push(worker);
     const wh = new WorkerHelper(worker);
     await wh.ready;
     wh.sendMessage('create', { nodes, tries, creator })
@@ -59,11 +70,7 @@ async function loadAndStart(creator: string, nodes: TSPNode[], tries: number, pr
 
 const indexToLetter = (index: number, start = 'A') => String.fromCharCode(start.charCodeAt(0) + index);
 
-function createTSPWithRandomPoints(countNodes: number, width: number, height: number, prng?: PRNG) {
-    if (!prng)
-        prng = new PRNG(0x76AFF32);
-    // prng = new PRNG(Math.random() * Number.MAX_SAFE_INTEGER);
-
+function createTSPWithRandomPoints(countNodes: number, width: number, height: number, prng: PRNG) {
     const nodes = [];
     for (let i = 0; i < countNodes; i++)
         nodes.push(new TSPNode(indexToLetter(i), prng.randomInteger(0, width), prng.randomInteger(0, height)));
@@ -108,22 +115,28 @@ export interface ImprovementWithIndex extends Improvement {
 
 export interface AlgorithmProgress {
     name: string;
-    startTime: number;
-    finishTime: undefined | number;
+    startTime?: number;
+    finishTime?: number;
     steps: RingBuffer<ImprovementWithIndex>;
 }
 
 const width = 400;
 const height = 400;
 
+
 document.addEventListener('DOMContentLoaded', async () => {
-    const tsp = createTSPWithRandomPoints(15, width, height);
+    const seedInput = document.querySelector('#seed') as HTMLInputElement;
+    const mainElem = document.querySelector('main') as HTMLElement;
+    const formElem = document.querySelector('form') as HTMLFormElement;
+
+    let seed = 0x122312;
+    let tsp: TSPNode[] = [];
     let shouldRender = true;
 
     const renderLoop = () => {
         if (shouldRender) {
             shouldRender = false;
-            render(main, tsp, algorithms);
+            render(mainElem, tsp, algorithms);
         }
 
 
@@ -136,34 +149,67 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const tries = 10 ** 7;
     // await awaitClick();
-    const main = document.body.children[0] as HTMLElement;
-    const algorithms: AlgorithmProgress[] = [];
-    const startTime = Date.now();
-    for (const processor of [
+
+
+    const registeredProcessors = [
         'BruteForce',
         'HillClimbing',
         'SimpleEA'
-    ]) {
-        let improvement = 0;
-        let improvements = new RingBuffer<ImprovementWithIndex>(100);
-        improvements.push({ path: tsp, timestamp: startTime, index: improvement });
-        const ourRepresentation = { name: processor, startTime, finishTime: undefined, steps: improvements };
-        algorithms.push(ourRepresentation);
+    ];
+
+    let algorithms: AlgorithmProgress[] = [];
+
+    const clean = () => {
+        tsp = createTSPWithRandomPoints(8, width, height, new PRNG(seed));
+
+        algorithms = [];
+
+        for (const processor of registeredProcessors) {
+            algorithms.push({
+                name: processor,
+                startTime: undefined,
+                finishTime: undefined,
+                steps: new RingBuffer<ImprovementWithIndex>(100)
+            });
+        }
+
+        terminateAllWorker();
 
         shouldRender = true;
-
-        loadAndStart(processor, tsp, tries,
-            ({ path, ts }) => {
-                improvements.push({
-                    path, timestamp: ts, index: ++improvement
-                });
-
-                shouldRender = true;
-            },
-            ({ path, ts }) => {
-                (ourRepresentation as any).finishTime = ts;
-                shouldRender = true;
-            }
-        ).catch(console.error);
     }
+
+    clean();
+
+    const start = () => {
+        clean();
+        const startTime = Date.now();
+
+        for (const processor of registeredProcessors) {
+            const ourRepresentation = algorithms.filter(r => r.name == processor)[0];
+            let improvement = 0;
+            let improvements = ourRepresentation.steps;
+            ourRepresentation.startTime = startTime;
+
+            shouldRender = true;
+
+            loadAndStart(processor, tsp, tries,
+                ({ path, ts }) => {
+                    improvements.push({
+                        path, timestamp: ts, index: ++improvement
+                    });
+
+                    shouldRender = true;
+                },
+                ({ path, ts }) => {
+                    (ourRepresentation as any).finishTime = ts;
+                    shouldRender = true;
+                }
+            )
+                .catch(console.error)
+        }
+
+    }
+
+    seedInputHelper(seedInput, val => (seed = val, clean()), seed);
+    formElem.addEventListener('submit', ev => (ev.preventDefault(), start()))
 });

@@ -17,8 +17,6 @@ for (const module of Object.values(modules))
             else
                 processors.set(processor.name, processor);
 
-console.log('loaded:', Array.from(processors.keys()));
-
 const waitMs = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 const wh = new WorkerHelper();
@@ -36,7 +34,7 @@ const wh = new WorkerHelper();
     const processorInstance = new (processors.get(creator))(nodes, tries);
     for (const progress of processorInstance) {
         wh.sendMessage('progressed', progress);
-        // await waitMs(10);
+        await waitMs(50);
     }
 
     wh.sendMessage('finished');

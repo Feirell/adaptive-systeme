@@ -110,7 +110,7 @@ function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: 
       ].join(' ')}>
 
       <NodesRenderer nodes={availableNodes} />
-      <PathRenderer path={lastImprovement.path} />
+      <PathRenderer path={lastImprovement ? lastImprovement.path : []} />
     </svg>
     <div className="sidebar">
       <div className="meta">
