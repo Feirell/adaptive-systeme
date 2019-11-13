@@ -92,22 +92,25 @@ function Improvement({ improvement }: { improvement: Improvement }) {
   </div>
 }
 
+const viewBoxPadding = 10;
+const viewBoxWithPadding = [
+  -viewBoxPadding,
+  -viewBoxPadding,
+  width + 2 * viewBoxPadding,
+  height + 2 * viewBoxPadding
+].join(' ');
+
 function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: TSPNode[], algorithm: AlgorithmProgress }) {
   const lastImprovement = algorithm.steps.get(algorithm.steps.length - 1);
 
   const finished = algorithm.finishTime != undefined;
   const finishedClass = finished ? ' finished' : '';
-  const viewBoxPadding = 10;
+
   return <div className={"implementation-display" + finishedClass}>
     <svg shapeRendering="geometricPrecision"
-      width={width + 2 * viewBoxPadding}
-      height={height + 2 * viewBoxPadding}
-      viewBox={[
-        -viewBoxPadding,
-        -viewBoxPadding,
-        width + 2 * viewBoxPadding,
-        height + 2 * viewBoxPadding
-      ].join(' ')}>
+      width={width}
+      height={height}
+      viewBox={viewBoxWithPadding}>
 
       <NodesRenderer nodes={availableNodes} />
       <PathRenderer path={lastImprovement ? lastImprovement.path : []} />
