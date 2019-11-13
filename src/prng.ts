@@ -1,4 +1,7 @@
 // taken from https://gist.github.com/blixt/f17b47c62508be59987b
+
+const makeUnique = <T>(arr: T[]) => Array.from(arr).sort().filter((v, i, a) => a.indexOf(v) == i);
+
 export class PRNG {
   private seed: number;
 
@@ -27,8 +30,24 @@ export class PRNG {
     return Math.floor(this.nextFloat() * (max - min + (inclusive as any))) + min;
   }
 
-  randomIntegerExcept(min: number, max: number, except: number, inclusive = false) {
-    let rnd = this.randomInteger(min, max - 1, inclusive);
-    return rnd >= except ? rnd + 1 : rnd;
+  randomIntegerExceptUnordered(min: number, max: number, except: number[], inclusive = false) {
+    this.randomIntegerExcept(min, max, makeUnique(except), inclusive);
+  }
+
+  randomIntegerExcept(min: number, max: number, except: number | number[], inclusive = false) {
+    if (typeof except == 'number')
+      except = [except];
+
+    except.length
+    let rnd = this.randomInteger(min, max - except.length, inclusive);
+
+    for (const exc of except) {
+      if (rnd < exc)
+        return rnd;
+      else if (rnd >= exc)
+        rnd++;
+    }
+
+    return rnd;
   }
 }

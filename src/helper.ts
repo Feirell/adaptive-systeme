@@ -113,3 +113,7 @@ export function pathCompare(a: TSPNode[], b: TSPNode[]) {
 
   return 0;
 }
+
+export function switchRandomRange<T>(arr: T[], start: number, length: number, shiftDelta: number) {
+  // shift length amount elements from start to start + shiftDelta, be aware of array length limitations
+}
