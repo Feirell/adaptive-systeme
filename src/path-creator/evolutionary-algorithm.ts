@@ -82,6 +82,7 @@ abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> extends P
 export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     public static readonly processorName = "SimpleEA";
     protected readonly childrenSize = (this.populationSize * 0.75) | 0;
+    protected readonly shuffleAmount = (this.availableNodes.length * 0.3) | 0;
 
     protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {
         const arr = new Array(this.populationSize);
@@ -105,7 +106,14 @@ export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected mutate(individual: TSPIndividual): TSPIndividual {
-        return { phenotype: turnTwoAround(individual.phenotype, this.prng) };
+        let path = individual.phenotype;
+
+
+        for (let i = 0; i < this.shuffleAmount; i++) {
+            path = turnTwoAround(path, this.prng)
+        }
+
+        return { phenotype: path };
     }
 
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {
