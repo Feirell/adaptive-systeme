@@ -33,9 +33,6 @@ class UsedMemory {
     if (checkForRangeError)
       this.checkRange(startIndex);
 
-
-    // TODO used start index, go over edge and go this.length - 1 steps (numbers)
-
     for (let i = 0; i < this.length; i++) {
       let acutalIndex = startIndex + i
       if (acutalIndex >= this.length)
@@ -50,10 +47,61 @@ class UsedMemory {
 
   getNextUnusedAndMarkAsUsed(startIndex: number) {
     const next = this.getNextUnused(startIndex);
+
     if (next != null)
       this.use(next);
 
     return next;
+  }
+
+  getUnusedWithIndex(startIndex: number) {
+    for (let i = 0; i < this.length; i++) {
+      if (!this.used[i])
+        if (startIndex == 0)
+          return i;
+        else
+          startIndex--;
+    }
+
+    return null;
+  }
+
+  getUnusedWithIndexAndMarkAsUsed(startIndex: number) {
+    const next = this.getUnusedWithIndex(startIndex);
+
+    if (next != null)
+      this.use(next);
+
+    return next;
+  }
+
+  getUnusedWithIndexAndSwitchToNew(startIndex: number) {
+    const next = this.getUnusedWithIndex(startIndex);
+
+    if (next != null && startIndex != next) {
+      this.unuse(startIndex);
+      this.use(next);
+    }
+
+    return next;
+  }
+
+  getIndexOfItemInUnused(index: number) {
+    let acc = 0;
+
+    for (let i = 0; i < this.length; i++) {
+      const used = this.used[i];
+
+      if (i == index) {
+        if (used)
+          throw new Error('the given index ' + index + ' was not unused');
+
+        return acc;
+      }
+
+      if (!used)
+        acc++;
+    }
   }
 }
 
@@ -153,6 +201,34 @@ interface IteratorAndIterable<T> extends Iterator<T, T>, Iterable<T> { }
 // const allElems = Array.from(ite);
 // console.log(allElems);
 
+export function* getCombinationOnlyUnique<T>(elements: T[], lengthOfCombination: number = elements.length): Generator<T[]> {
+  for (let i = 0; i < elements.length; i++) {
+    const copy = elements.slice(0);
+    const current = copy.splice(i, 1)[0];
+
+    if (lengthOfCombination > 1)
+      for (const combination of getCombinationOnlyUnique(copy, lengthOfCombination - 1)) {
+        yield [current, ...combination];
+      }
+    else
+      yield [current];
+  }
+}
+
+function* getCombinationOnlyUniqueNew<T>(elements: T[], lengthOfCombination: number = elements.length): Generator<T[]> {
+  for (let i = 0; i < elements.length; i++) {
+    const copy = elements.slice(0);
+    const current = copy.splice(i, 1)[0];
+
+    if (lengthOfCombination > 1)
+      for (const combination of getCombinationOnlyUnique(copy, lengthOfCombination - 1)) {
+        yield [current, ...combination];
+      }
+    else
+      yield [current];
+  }
+}
+
 const turnToString = (arr: number[][], group: number) => {
   let acc = [];
   // const mult = faculty(letters - 1);
@@ -177,10 +253,6 @@ const faculty = (n: number, bottom = 1) => {
 
 const getGroupLength = (group: number, letters: number, width: number) =>
   faculty(letters - 1 - group, letters - width)
-
-
-const places = 5;
-const letters = 10;
 
 
 // amount: number = faculty(letters)
@@ -209,13 +281,27 @@ const getFirstXElementsFromIte = <T>(ite: Iterable<T>, elemCount: number): T[] =
   return ret;
 }
 
+const generatorToIte = <T>(gen: Generator<T>): IteratorAndIterable<T> => {
+  const ite = {
+    next: () => gen.next(),
+    [Symbol.iterator]: () => ite
+  }
+
+  return ite;
+}
+
+const getUniqueIndexCombinationsOld = (places: number, letters: number): IteratorAndIterable<number[]> =>
+  generatorToIte(getCombinationOnlyUnique(new Array(letters).fill(0).map((_, i) => i), places));
+
 function getUniqueIndexCombinationsNonRec(places: number, letters: number): IteratorAndIterable<number[]> {
   let i = 0;
+
+  const groupLength = new Uint32Array(places).map((_, i) => getGroupLength(i, letters, places));
 
   return makeIterAndIter(() => {
     const currentConfig = [];
     for (let p = 0; p < places; p++) {
-      const group = Math.floor(i / getGroupLength(p, letters, places));
+      const group = Math.floor(i / groupLength[p]);
       const inGroupCount = group % (letters - p);
 
       let actualIndex = inGroupCount;
@@ -233,31 +319,141 @@ function getUniqueIndexCombinationsNonRec(places: number, letters: number): Iter
   })
 }
 
-const getUniqueIndexCombinationsRec = (places: number, letters: number, amount: number = faculty(letters)) => {
-  const correct = new Array(amount);
+const logging = false;
 
-  for (let i = 0; i < amount; i++) {
-    const currentConfig = [];
-    for (let p = 0; p < places; p++) {
-      const group = Math.floor(i / getGroupLength(p, letters, places));
-      const inGroupCount = group % (letters - p);
+const getUniqueIndexCombinationsNonRecBetter = (places: number, letters: number): IteratorAndIterable<number[]> => {
+  return generatorToIte((function* () {
+    let current: (null | number)[] = [null, null, null];
 
-      let actualIndex = inGroupCount;
-      for (let u = 0; u < p; u++) {
-        if (actualIndex >= currentConfig[u])
-          actualIndex++;
+    const mem = new UsedMemory(letters);
+
+    let column = 0;
+    while (column >= 0) {
+      if (logging)
+        console.groupEnd();
+      if (logging)
+        console.group('column', column);
+
+      if (current[column] != null)
+        mem.unuse(current[column] as number);
+
+      const currentUsedVariation = current[column] !== null ? mem.getIndexOfItemInUnused(current[column] as number) as number : -1;
+      const availableVariations = letters - column;
+
+      if (currentUsedVariation == availableVariations - 1) {
+        current[column] = null as any;
+        column--;
+      } else {
+        for (let variation = currentUsedVariation + 1; variation < availableVariations; variation++) {
+
+          current = current.slice(0);
+
+          const val = mem.getUnusedWithIndex(variation) as number;
+
+          const before = current.slice(0);
+          current[column] = val as any as number;
+
+          const isLastColumn = column == places - 1;
+          const doneAllVariations = variation == letters - column - 1;
+
+          if (logging)
+            console.log('combination before', before, 'isLastColumn', isLastColumn, 'doneAllVariations', doneAllVariations, 'column', column, ', variation', variation, 'availableVariations', availableVariations, ', received value:', val, 'combination after', current.slice(0));
+
+
+          if (!isLastColumn) {
+            // go to next column
+            mem.use(current[column] as number);
+            column++;
+            break;
+          }
+
+          // yield result
+          const result = current.slice(0) as number[];
+          yield result;
+
+          if (doneAllVariations) {
+            // go to previous column
+            mem.unuse(current[column] as number);
+            current[column] = null;
+            column--;
+            break;
+          }
+
+        }
       }
-
-      currentConfig[p] = actualIndex;
     }
-    correct[i] = currentConfig;
-  }
 
-  return correct;
+    if (logging)
+      console.log('finished the loop', column);
+  })())
+
+  // const currentConfig = [];
+  // for (let p = 0; p < places; p++) {
+  //   const group = Math.floor(i / getGroupLength(p, letters, places));
+  //   const inGroupCount = group % (letters - p);
+
+  //   let actualIndex = inGroupCount;
+  //   for (let u = 0; u < p; u++) {
+  //     if (actualIndex >= currentConfig[u])
+  //       actualIndex++;
+  //   }
+
+  //   currentConfig[p] = actualIndex;
+  // }
+
+  // return currentConfig;
 }
 
-console.log(turnToString(
-  getFirstXElementsFromIte(getUniqueIndexCombinationsNonRec(places, letters), 10),
-  getGroupLength(0, letters, places))
-);
 
+const places = 3;
+const letters = 12;
+
+interface Algorithm {
+  (places: number, letters: number): IteratorAndIterable<number[]>
+}
+
+const speedTest = (letters: number, places: number) => {
+  const definedAlgorithms: Algorithm[] = [
+    getUniqueIndexCombinationsOld,
+    getUniqueIndexCombinationsNonRecBetter,
+    getUniqueIndexCombinationsNonRec
+  ];
+
+  for (const algorithm of definedAlgorithms) {
+    const start = performance.now();
+    for (let i = 0; i < 1000; i++) {
+      getFirstXElementsFromIte(algorithm(places, letters), faculty(letters, letters - places));
+    }
+    const diff = performance.now() - start;
+
+    console.log('diff for %s was %d', algorithm.name, diff);
+  }
+}
+
+
+const printAlgorithmOutput = (letters: number, places: number, algorithm: Algorithm) => {
+
+  const res = [];
+
+  let i = 0, elem;
+
+  let maxReturn = faculty(letters)
+  const ite = algorithm(places, letters);
+
+  while (elem = ite.next(), !elem.done) {
+    if (--maxReturn < 0)
+      throw new Error('algorithm ' + algorithm.name + ' should have stopped since it returned all variations');
+
+    res.push(elem.value);
+
+    // if (logging)
+    //   console.log(i++, elem.value);
+  }
+
+  const stringified = turnToString(res, faculty(letters - 1, letters - places));
+
+  console.log(stringified);
+}
+
+printAlgorithmOutput(4, 3, getUniqueIndexCombinationsNonRecBetter);
+printAlgorithmOutput(4, 3, getUniqueIndexCombinationsOld);
