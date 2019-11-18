@@ -7,10 +7,6 @@ import { TSPNode } from './tsp-node';
 
 import { WorkerHelper, TransferError } from './worker-helper';
 
-import './get-next-unique';
-
-throw void null;
-
 interface ProcessListener { (ev: { path: TSPNode[], ts: number }): void }
 
 const isTransferError = (val: any): val is TransferError => typeof val == 'object' && 'name' in val && 'stack' in val && 'message' in val;
@@ -165,7 +161,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let algorithms: AlgorithmProgress[] = [];
 
   const clean = () => {
-    tsp = createTSPWithRandomPoints(20, width, height, new PRNG(seed));
+    tsp = createTSPWithRandomPoints(14, width, height, new PRNG(seed));
 
     algorithms = [];
 

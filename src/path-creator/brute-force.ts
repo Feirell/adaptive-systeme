@@ -1,11 +1,12 @@
 import { TSPNode } from '../tsp-node';
 import { PathCreator } from './path-creator';
-import { getPathLength, getCombinationOnlyUnique } from '../helper';
+import { getPathLength } from '../helper';
+import { UniqueItemCombination } from '../unique-item-combiner';
 
 export class BruteForce extends PathCreator {
   public static readonly processorName = "BruteForce";
 
-  private readonly allCombination = getCombinationOnlyUnique(this.availableNodes);
+  private readonly allCombination = new UniqueItemCombination(this.availableNodes.slice(0));
   private shortestLength: number;
   private shortestPath: TSPNode[];
   private done = false;
@@ -18,15 +19,16 @@ export class BruteForce extends PathCreator {
   }
 
   step(): TSPNode[] {
-    let variation;
 
-    while (variation = this.allCombination.next(), !variation.done && variation.value && this.countMinorStep()) {
-      const variationValue = variation.value;
-      let length = getPathLength(variationValue);
+    for (const variation of this.allCombination) {
+      if (!this.countMinorStep())
+        break;
+
+      let length = getPathLength(variation);
       if (!this.shortestLength || length < this.shortestLength) {
         this.shortestLength = length;
-        this.shortestPath = variationValue;
-        return variationValue;
+        this.shortestPath = variation;
+        return variation;
       }
     }
 
