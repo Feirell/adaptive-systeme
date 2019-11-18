@@ -44,20 +44,6 @@ export function fisherYatesShuffle<T>(arr: T[], prng: PRNG) {
   return copy;
 }
 
-export function* getCombinationOnlyUnique<T>(elements: T[], lengthOfCombination: number = elements.length): Generator<T[]> {
-  for (let i = 0; i < elements.length; i++) {
-    const copy = elements.slice(0);
-    const current = copy.splice(i, 1)[0];
-
-    if (lengthOfCombination > 1)
-      for (const combination of getCombinationOnlyUnique(copy, lengthOfCombination - 1)) {
-        yield [current, ...combination];
-      }
-    else
-      yield [current];
-  }
-}
-
 export function pathEqual(pathA: TSPNode[], pathB: TSPNode[]) {
   if (pathA.length != pathB.length)
     return false;
