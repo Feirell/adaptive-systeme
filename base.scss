@@ -34,7 +34,10 @@ body {
     display: flex;
     justify-content: space-around;
     align-items: center;
+    align-content: space-around;
     flex-wrap: wrap;
+    box-sizing: border-box;
+    padding: 5px 5px;
   }
 }
 
@@ -71,5 +74,36 @@ body {
     margin-top: 8px;
   }
 
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  .index {
+  }
+
+  .time-difference {
+    &:not(:empty) {
+      // &::before {
+      //   content: "+";
+      // }
+      &::after {
+        content: "ms";
+        margin-left: 3px;
+      }
+    }
+  }
+
+  .length {
+  }
+
+  .length-difference {
+    &:not(:empty) {
+      color: green;
+
+      &::before {
+        content: "-";
+      }
+    }
+  }
   // margin
 }

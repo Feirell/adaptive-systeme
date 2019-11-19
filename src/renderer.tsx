@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 
 import { TSPNode } from "./tsp-node";
-import { Improvement, AlgorithmProgress } from './index';
+import { Improvement, AlgorithmProgress, ImprovementWithIndex } from './index';
 import { getPathLength } from './helper';
 
 function keyForNode(node: TSPNode) {
@@ -85,10 +85,15 @@ const nrFormatter = (() => {
   return frm.format;
 })()
 
-function Improvement({ improvement }: { improvement: Improvement }) {
-  return <div className="improvement">
+function Improvement({ lengthDiff, improvement, timeDiff }: { lengthDiff: number | undefined, improvement: ImprovementWithIndex, timeDiff: number | undefined }) {
+  const pathStringVersion = improvement.path.map(v => v.name).join('-');
+
+  return <div className="improvement" title={pathStringVersion}>
+    <div className="index">{improvement.index}</div>
+    <div className="time-difference">{timeDiff}</div>
     <div className="length">{nrFormatter(getPathLength(improvement.path))}</div>
-    <div className="path">{improvement.path.map((n, i) => <span key={i}>{n.name}</span>)}</div>
+    <div className="length-difference">{lengthDiff ? nrFormatter(lengthDiff) : undefined}</div>
+    {/* <div className="path">{improvement.path.map((n, i) => <span key={i}>{n.name}</span>)}</div> */}
   </div>
 }
 
@@ -106,6 +111,8 @@ function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: 
   const finished = algorithm.finishTime != undefined;
   const finishedClass = finished ? ' finished' : '';
 
+  const allSteps = [...algorithm.steps];
+
   return <div className={"implementation-display" + finishedClass}>
     <svg shapeRendering="geometricPrecision"
       width={width}
@@ -121,7 +128,12 @@ function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: 
         <div><span>Fertig:</span><span>{finished ? 'ja' : 'nein'}</span></div>
       </div>
       <div className="improvement-timeline">
-        {[...algorithm.steps].map((p) => <Improvement key={p.index} improvement={p} />)}
+        {allSteps.map((p, i, a) => <Improvement
+          key={p.index}
+          improvement={p}
+          timeDiff={i == 0 ? undefined : a[i].timestamp - a[i - 1].timestamp}
+          lengthDiff={i == 0 ? undefined : getPathLength(a[i - 1].path) - getPathLength(a[i].path)}
+        />)}
       </div>
     </div>
   </div>

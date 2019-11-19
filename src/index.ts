@@ -166,16 +166,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   requestAnimationFrame(renderLoop);
 
-  // for (bestRoute of tsp.getBestRouteBruteForce()) {
-
-  // const tries = 10 ** 7;
+  // const tries = 10 ** 6;
   const tries = Number.MAX_VALUE;
-  // await awaitClick();
 
 
   const registeredProcessors = [
-    // 'BruteForce',
-    // 'HillClimbing',
+    'BruteForce',
+    'HillClimbing',
     'SimpleEA',
     'MoreComplexEA'
   ];
@@ -192,7 +189,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         name: processor,
         startTime: undefined,
         finishTime: undefined,
-        steps: new RingBuffer<ImprovementWithIndex>(100)
+        steps: new RingBuffer<ImprovementWithIndex>(9)
       });
     }
 
