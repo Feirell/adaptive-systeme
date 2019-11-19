@@ -28,9 +28,12 @@ export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> ex
     protected population: null | Individual[] = null;
 
     private finished = false;
-    private lastBest = this.doGeneration();
+    private lastBest: TSPNode[];
 
     protected step(): TSPNode[] {
+        if (!this.lastBest)
+            return this.lastBest = this.doGeneration();
+
         for (let tries = 0; tries < this.numberOfTries; tries++) {
             const current = this.doGeneration();
             if (isPathBetter(current, this.lastBest)) {
@@ -51,18 +54,21 @@ export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> ex
         if (this.population == null)
             this.population = this.createInitialPopulation(this.availableNodes);
         else {
-            let newPopulation: Individual[] = [];
             const selectedParents = this.parentSelection(this.population);
+            const createdChildren: Individual[][] = [];
 
             for (const parents of selectedParents) {
                 const recombinationResult = this.recombination(parents);
 
-                newPopulation = newPopulation.concat(
-                    recombinationResult.parents,
-                    recombinationResult.children.map(c => this.mutate(c))
-                );
+                const mutatedChildren = [];
+
+                for (const child of recombinationResult)
+                    mutatedChildren.push(this.mutate(child));
+
+                createdChildren.push(mutatedChildren);
             }
 
+            const newPopulation = this.combineToNewPopulation(selectedParents, createdChildren);
             this.population = this.environmentSelection(newPopulation);
         }
 
@@ -72,7 +78,12 @@ export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> ex
     protected abstract createInitialPopulation(availableNodes: TSPNode[]): Individual[];
 
     protected abstract parentSelection(individuals: Individual[]): Individual[][];
-    protected abstract recombination(parents: Individual[]): { parents: Individual[], children: Individual[] };
+    protected abstract recombination(selected: Individual[]): Individual[];
+
+    protected combineToNewPopulation(parents: Individual[][], children: Individual[][]): Individual[] {
+        return Array.prototype.concat.apply([], parents.concat(children));
+    }
+
     protected abstract mutate(individual: Individual): Individual;
     protected abstract environmentSelection(individuals: Individual[]): Individual[];
 }

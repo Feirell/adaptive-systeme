@@ -1,6 +1,7 @@
-import { EvolutionaryAlgorithm, TSPIndividual, sortBest } from "./evolutionary-algorithm";
+import { EvolutionaryAlgorithm, TSPIndividual } from "./evolutionary-algorithm";
 import { TSPNode } from "../tsp-node";
 import { fisherYatesShuffle, turnTwoAround } from "../helper";
+import { recombineCopy, selectBestX, selectRandomX } from "../es-helper";
 
 export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     public static readonly processorName = "SimpleEA";
@@ -15,16 +16,11 @@ export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
-        return fisherYatesShuffle(individuals, this.prng)
-            .slice(0, this.childrenSize)
-            .map(v => [v]);
+        return selectRandomX(individuals, this.childrenSize, this.prng).map(v => [v]);
     }
 
-    protected recombination(parents: TSPIndividual[]): { parents: TSPIndividual[]; children: TSPIndividual[]; } {
-        return {
-            parents: parents,
-            children: [{ phenotype: parents[0].phenotype.slice(0) }]
-        };
+    protected recombination(parents: TSPIndividual[]): TSPIndividual[] {
+        return recombineCopy(parents);
     }
 
     protected mutate(individual: TSPIndividual): TSPIndividual {
@@ -33,6 +29,6 @@ export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {
-        return sortBest(individuals).slice(0, this.populationSize);
+        return selectBestX(individuals, this.populationSize);
     }
 }

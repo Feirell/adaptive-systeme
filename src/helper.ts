@@ -9,8 +9,8 @@ export function getDistance(a: TSPNode, b: TSPNode): number {
 const lengthCache: unique symbol = Symbol("lengthCache");
 const hasCachedLength = (nodes: TSPNode[]): nodes is TSPNode[] & { [lengthCache]: number } => lengthCache in nodes;
 export function getPathLength(nodes: TSPNode[]): number {
-  // if (hasCachedLength(nodes))
-  // return nodes[lengthCache] as number;
+  if (hasCachedLength(nodes))
+    return nodes[lengthCache] as number;
 
   if (nodes.length <= 1)
     throw new Error('length can not be calculated for an path with one or non nodes');
@@ -27,7 +27,7 @@ export function getPathLength(nodes: TSPNode[]): number {
   length += getDistance(nodes[0], last);
 
 
-  // Object.defineProperty(nodes, lengthCache, { value: length, configurable: false, enumerable: false })
+  Object.defineProperty(nodes, lengthCache, { value: length, configurable: false, enumerable: false })
   return length;
 }
 

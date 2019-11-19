@@ -1,7 +1,7 @@
 import { EvolutionaryAlgorithm, TSPIndividual, sortBest } from "./evolutionary-algorithm"
 import { TSPNode } from "../tsp-node";
 import { fisherYatesShuffle, shiftRandomRange, flipRandomSection, clamp } from "../helper";
-import { selectRandomX } from "../es-helper";
+import { selectRandomX, recombineCopy, selectBestX } from "../es-helper";
 
 export class MoreComplexEA extends EvolutionaryAlgorithm<TSPIndividual>{
     public static readonly processorName = "MoreComplexEA";
@@ -20,14 +20,11 @@ export class MoreComplexEA extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
-        return selectRandomX(individuals, this.childrenSize, this.prng);
+        return selectRandomX(individuals, this.childrenSize, this.prng).map(v => [v]);
     }
 
-    protected recombination(parents: TSPIndividual[]): { parents: TSPIndividual[]; children: TSPIndividual[]; } {
-        return {
-            parents: parents,
-            children: [{ phenotype: parents[0].phenotype.slice(0) }]
-        };
+    protected recombination(selected: TSPIndividual[]): TSPIndividual[] {
+        return recombineCopy(selected);
     }
 
     protected mutate(individual: TSPIndividual): TSPIndividual {
@@ -45,7 +42,6 @@ export class MoreComplexEA extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {
-        // console.log('switchAmount', this.switchAmount);
-        return sortBest(individuals).slice(0, this.populationSize);
+        return selectBestX(individuals, this.populationSize);
     }
 }
