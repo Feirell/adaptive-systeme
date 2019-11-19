@@ -68,12 +68,31 @@ async function loadAndStart(creator: string, nodes: TSPNode[], tries: number, pr
   }
 }
 
-const indexToLetter = (index: number, start = 'A') => String.fromCharCode(start.charCodeAt(0) + index);
+const indexToLetter = (index: number, length = 2) => {
+  let remaining = index;
+  let accumulated = "";
+
+  const baseNr = 'A'.charCodeAt(0);
+  for (let i = length - 1; i >= 0; i--) {
+    let val = Math.floor(remaining / 26 ** i);
+    remaining -= val * 26 ** i;
+
+    accumulated += String.fromCharCode(baseNr + val);
+  }
+
+  return accumulated;
+};
 
 function createTSPWithRandomPoints(countNodes: number, width: number, height: number, prng: PRNG) {
-  const nodes = [];
+  const nodes = new Array(countNodes);
+  const identifierLength = Math.ceil(Math.log(countNodes) / Math.log(26));
+
   for (let i = 0; i < countNodes; i++)
-    nodes.push(new TSPNode(i.toString(36), prng.randomInteger(0, width), prng.randomInteger(0, height)));
+    nodes[i] = new TSPNode(
+      indexToLetter(i, identifierLength),
+      prng.randomInteger(0, width),
+      prng.randomInteger(0, height)
+    );
 
   return nodes;
 }
