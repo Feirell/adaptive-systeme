@@ -20,7 +20,7 @@ const createCharRangeValidator = (ranges: [string, string][]): CharacterValidato
 
 const validator = createCharRangeValidator([['0', '9'], ['A', 'Z']]);
 
-export const cleanSeedString = (str: string) => [...str].filter(validator).join('');
+export const cleanSeedString = (str: string) => [...str].filter(validator).join('') || '0';
 
 export const convertToSeedString = (seed: number): string => seed.toString(36).toUpperCase();
 export const convertToSeedNumber = (seed: string): number => Number.parseInt(seed.toLowerCase(), 36)
@@ -48,6 +48,38 @@ export function seedInputHelper(inputElem: HTMLInputElement, seedChanged: (newSe
         if (numberValue != last) {
             last = numberValue;
             seedChanged(numberValue);
+        }
+    }
+
+    inputElem.addEventListener('input', handleChange);
+}
+
+export function nodeAmountHelper(inputElem: HTMLInputElement, amountChanged: (newSeed: number) => void, initial = 0) {
+    const retrieveValue = () => Number.parseInt(inputElem.value);
+    const applyValue = (val: number) => inputElem.value = (val | 0).toString(10);
+
+    let last: number = retrieveValue();
+
+    if (initial != last) {
+        amountChanged(last);
+    }
+
+    const handleChange = () => {
+        let numberValue = retrieveValue();
+
+        if (numberValue < 1) {
+            numberValue = 1
+            applyValue(numberValue);
+        }
+
+        if (numberValue > Number.MAX_SAFE_INTEGER) {
+            numberValue = Number.MAX_SAFE_INTEGER
+            applyValue(numberValue);
+        }
+
+        if (numberValue != last) {
+            last = numberValue;
+            amountChanged(numberValue);
         }
     }
 

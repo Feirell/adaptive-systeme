@@ -1,4 +1,4 @@
-import { seedInputHelper } from './seed-helper';
+import { seedInputHelper, nodeAmountHelper } from './input-helper';
 import { RingBuffer } from './ring-buffer';
 import { Error as ChainableError } from 'chainable-error';
 import { render } from './renderer';
@@ -145,10 +145,12 @@ const height = 400;
 
 document.addEventListener('DOMContentLoaded', async () => {
   const seedInput = document.querySelector('#seed') as HTMLInputElement;
+  const amountInput = document.querySelector('#amount') as HTMLInputElement;
   const mainElem = document.querySelector('main') as HTMLElement;
   const formElem = document.querySelector('form') as HTMLFormElement;
 
   let seed = 0x122312;
+  let amount = 2;
   let tsp: TSPNode[] = [];
   let shouldRender = true;
 
@@ -180,7 +182,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   let algorithms: AlgorithmProgress[] = [];
 
   const clean = () => {
-    tsp = createTSPWithRandomPoints(14, width, height, new PRNG(seed));
+    tsp = createTSPWithRandomPoints(amount, width, height, new PRNG(seed));
 
     algorithms = [];
 
@@ -231,5 +233,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   seedInputHelper(seedInput, val => (seed = val, clean()), seed);
+  nodeAmountHelper(amountInput, val => (amount = val, clean()), amount);
   formElem.addEventListener('submit', ev => (ev.preventDefault(), start()))
 });
