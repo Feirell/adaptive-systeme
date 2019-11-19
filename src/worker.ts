@@ -1,7 +1,7 @@
 // console.log('here is the worker!');
 import { WorkerHelper } from './worker-helper';
 import { PathCreator, PathCreatorConstructor } from './path-creator/path-creator';
-import modules from './path-creator/{brute-force,hill-climbing,evolutionary-algorithm}.ts';
+import modules from './path-creator/{brute-force,hill-climbing,simple-ea}.ts';
 import { TSPNode } from './tsp-node';
 
 // console.log('processors', modules, typeof modules, modules instanceof Object);

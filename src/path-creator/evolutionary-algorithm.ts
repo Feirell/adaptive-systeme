@@ -1,17 +1,17 @@
-import { getPathLength, fisherYatesShuffle, switchRandomTwo, turnTwoAround, isPathBetter, pathCompare } from '../helper';
+import { isPathBetter, pathCompare } from '../helper';
 import { PathCreator } from './path-creator';
 import { TSPNode } from '../tsp-node';
 
-interface TSPIndividual {
+export interface TSPIndividual {
     phenotype: TSPNode[];
 }
 
 const individualCombination = (a: TSPIndividual, b: TSPIndividual) =>
     pathCompare(a.phenotype, b.phenotype);
 
-const sortBest = (individuum: TSPIndividual[]) => Array.from(individuum).sort(individualCombination);
+export const sortBest = (individuum: TSPIndividual[]) => Array.from(individuum).sort(individualCombination);
 
-const isIndividuumBetter = (a: TSPIndividual, b: TSPIndividual) => isPathBetter(a.phenotype, b.phenotype);
+// const isIndividuumBetter = (a: TSPIndividual, b: TSPIndividual) => isPathBetter(a.phenotype, b.phenotype);
 
 const findBestIndividuum = (individuals: TSPIndividual[]) => {
     let best = individuals[0];
@@ -23,7 +23,7 @@ const findBestIndividuum = (individuals: TSPIndividual[]) => {
     return best;
 }
 
-abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> extends PathCreator {
+export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> extends PathCreator {
     protected readonly populationSize = 100;
     protected population: null | Individual[] = null;
 
@@ -77,46 +77,3 @@ abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> extends P
     protected abstract environmentSelection(individuals: Individual[]): Individual[];
 }
 
-
-
-export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
-    public static readonly processorName = "SimpleEA";
-    protected readonly childrenSize = (this.populationSize * 0.75) | 0;
-    protected readonly shuffleAmount = (this.availableNodes.length * 0.3) | 0;
-
-    protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {
-        const arr = new Array(this.populationSize);
-        for (let i = 0; i < this.populationSize; i++)
-            arr[i] = { phenotype: fisherYatesShuffle(availableNodes, this.prng) };
-
-        return arr;
-    }
-
-    protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
-        return fisherYatesShuffle(individuals, this.prng)
-            .slice(0, this.childrenSize)
-            .map(v => [v]);
-    }
-
-    protected recombination(parents: TSPIndividual[]): { parents: TSPIndividual[]; children: TSPIndividual[]; } {
-        return {
-            parents: parents,
-            children: [{ phenotype: parents[0].phenotype.slice(0) }]
-        };
-    }
-
-    protected mutate(individual: TSPIndividual): TSPIndividual {
-        let path = individual.phenotype;
-
-
-        for (let i = 0; i < this.shuffleAmount; i++) {
-            path = turnTwoAround(path, this.prng)
-        }
-
-        return { phenotype: path };
-    }
-
-    protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {
-        return sortBest(individuals).slice(0, this.populationSize);
-    }
-}
