@@ -176,7 +176,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const registeredProcessors = [
     'BruteForce',
     'HillClimbing',
-    'SimpleEA'
+    'SimpleEA',
+    'MoreComplexEA'
   ];
 
   let algorithms: AlgorithmProgress[] = [];
