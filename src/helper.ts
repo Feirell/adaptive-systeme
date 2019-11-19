@@ -100,6 +100,84 @@ export function pathCompare(a: TSPNode[], b: TSPNode[]) {
   return 0;
 }
 
-export function switchRandomRange<T>(arr: T[], start: number, length: number, shiftDelta: number) {
-  // shift length amount elements from start to start + shiftDelta, be aware of array length limitations
+
+const cyclicAt = (rangeLength: number, length: number) =>
+  Math.max((rangeLength - length) * rangeLength, length);
+
+export function shiftRandomRange<T>(prng: PRNG, arr: T[]) {
+
+  const start = prng.randomInteger(0, arr.length);
+  const length = prng.randomInteger(1, arr.length);
+  const shiftDelta = prng.randomInteger(1, cyclicAt(arr.length, length))
+
+  return shiftRange(arr, start, length, shiftDelta);
+}
+
+export function shiftRange<T>(arr: T[], start: number, length: number, shiftDelta: number) {
+  // console.log('shiftRange', ...arguments);
+  const arrLength = arr.length;
+
+  shiftDelta %= cyclicAt(arrLength, length);
+
+  // this trick loop solves the problem, it is not good, but it will work
+  let ret;
+  do {
+    ret = arr.slice(0);
+    const intermediateShiftDelta = Math.min(shiftDelta, arrLength - length);
+
+    // places the displaces items at their correct new position, this part produces the above error
+    for (let off = 0; off < intermediateShiftDelta; off++) {
+
+      let actualIndex = (start + off) % arrLength;
+      let cameFrom = (start + off + length) % arrLength;
+
+      ret[actualIndex] = arr[cameFrom];
+    }
+
+    // place the moving part [start,start+length) to the right position
+    for (let off = 0; off < length; off++) {
+      const actualIndex = (start + intermediateShiftDelta + off) % arrLength;
+      const cameFrom = (start + off) % arrLength;
+
+      ret[actualIndex] = arr[cameFrom];
+    }
+
+    start += intermediateShiftDelta;
+    shiftDelta -= intermediateShiftDelta;
+    arr = ret;
+  } while (shiftDelta > 0)
+
+  return ret;
+}
+
+export function flipRandomSection<T>(prng: PRNG, arr: T[]) {
+  const start = prng.randomInteger(0, arr.length);
+  const length = prng.randomInteger(1, arr.length);
+
+  return flipSection(arr, start, length);
+}
+
+export function flipSection<T>(arr: T[], start: number, length: number) {
+  // console.log('flip section was called')
+  const newArr = arr.slice(0);
+
+  for (let i = 0; i < Math.floor(length / 2); i++) {
+    const from = (start + i) % arr.length;
+    const to = (start + length - i - 1) % arr.length;
+
+    newArr[from] = arr[to];
+    newArr[to] = arr[from];
+  }
+
+  return newArr;
+}
+
+export function clamp(value: number, min: number, max: number) {
+  if (value < min)
+    return min;
+
+  if (value > max)
+    return max;
+
+  return value;
 }

@@ -174,8 +174,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   const registeredProcessors = [
-    'BruteForce',
-    'HillClimbing',
+    // 'BruteForce',
+    // 'HillClimbing',
     'SimpleEA',
     'MoreComplexEA'
   ];
@@ -207,15 +207,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     clean();
     const startTime = Date.now();
 
-    for (const processor of registeredProcessors) {
-      const ourRepresentation = algorithms.filter(r => r.name == processor)[0];
+    for (const ourRepresentation of algorithms) {
       let improvement = 0;
       let improvements = ourRepresentation.steps;
       ourRepresentation.startTime = startTime;
 
       shouldRender = true;
 
-      loadAndStart(processor, tsp, tries,
+      loadAndStart(ourRepresentation.name, tsp, tries,
         ({ path, ts }) => {
           improvements.push({
             path, timestamp: ts, index: ++improvement
@@ -235,5 +234,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   seedInputHelper(seedInput, val => (seed = val, clean()), seed);
   nodeAmountHelper(amountInput, val => (amount = val, clean()), amount);
-  formElem.addEventListener('submit', ev => (ev.preventDefault(), start()))
+  formElem.addEventListener('submit', ev => (ev.preventDefault(), start()));
+
+  start();
 });
