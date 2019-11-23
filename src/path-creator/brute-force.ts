@@ -13,18 +13,20 @@ export class BruteForce extends PathCreator {
 
   constructor(nodes: TSPNode[], tries: number) {
     super(nodes, tries);
-
-    this.shortestLength = getPathLength(nodes);
-    this.shortestPath = nodes;
   }
 
   step(): TSPNode[] {
+    if (!this.shortestPath) {
+      this.shortestLength = getPathLength(this.shortestPath = this.availableNodes);
+      return this.shortestPath;
+    }
 
     for (const variation of this.allCombination) {
       if (!this.countMinorStep())
         break;
 
       let length = getPathLength(variation);
+
       if (!this.shortestLength || length < this.shortestLength) {
         this.shortestLength = length;
         this.shortestPath = variation;
@@ -36,8 +38,6 @@ export class BruteForce extends PathCreator {
       this.done = true;
       throw new Error('there are no available combinations');
     }
-
-    // console.log('this.callCount', this.callCount);
 
     this.done = true;
     return this.shortestPath;
