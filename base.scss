@@ -81,7 +81,8 @@ body {
   .index {
   }
 
-  .time-difference {
+  .time-difference,
+  .total-time-diff {
     &:not(:empty) {
       // &::before {
       //   content: "+";

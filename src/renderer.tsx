@@ -80,19 +80,26 @@ function PathRenderer({ path }: { path: TSPNode[] }) {
 const width = 400;
 const height = 400;
 
-const nrFormatter = (() => {
+const decNrFormatter = (() => {
   const frm = Intl.NumberFormat(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return frm.format;
 })()
 
-function Improvement({ lengthDiff, improvement, timeDiff }: { lengthDiff: number | undefined, improvement: ImprovementWithIndex, timeDiff: number | undefined }) {
+const nrFormatter = (() => {
+  const frm = Intl.NumberFormat(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  return frm.format;
+})()
+
+
+function Improvement({ lengthDiff, improvement, timeDiff, totalTimeDiff }: { totalTimeDiff: number, lengthDiff: number | undefined, improvement: ImprovementWithIndex, timeDiff: number | undefined }) {
   const pathStringVersion = improvement.path.map(v => v.name).join('-');
 
   return <div className="improvement" title={pathStringVersion}>
     <div className="index">{improvement.index}</div>
-    <div className="time-difference">{timeDiff}</div>
-    <div className="length">{nrFormatter(getPathLength(improvement.path))}</div>
-    <div className="length-difference">{lengthDiff ? nrFormatter(lengthDiff) : undefined}</div>
+    <div className="total-time-diff">{nrFormatter(totalTimeDiff)}</div>
+    <div className="time-difference">{timeDiff ? nrFormatter(timeDiff) : undefined}</div>
+    <div className="length-difference">{lengthDiff ? decNrFormatter(lengthDiff) : undefined}</div>
+    <div className="length">{decNrFormatter(getPathLength(improvement.path))}</div>
     {/* <div className="path">{improvement.path.map((n, i) => <span key={i}>{n.name}</span>)}</div> */}
   </div>
 }
@@ -132,6 +139,7 @@ function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: 
           key={p.index}
           improvement={p}
           timeDiff={i == 0 ? undefined : a[i].timestamp - a[i - 1].timestamp}
+          totalTimeDiff={p.timestamp - (algorithm.startTime || 0)}
           lengthDiff={i == 0 ? undefined : getPathLength(a[i - 1].path) - getPathLength(a[i].path)}
         />)}
       </div>
