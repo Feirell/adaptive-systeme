@@ -31,6 +31,8 @@ const wh = new WorkerHelper();
         return;
     }
 
+    console.debug('registered: ' + JSON.stringify(Array.from(processors.keys())) + ' and starting: ' + creator);
+
     const processorInstance = new (processors.get(creator))(nodes, tries);
     for (const progress of processorInstance) {
         wh.sendMessage('progressed', progress);

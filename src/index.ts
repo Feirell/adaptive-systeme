@@ -168,6 +168,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // const tries = 10 ** 6;
   const tries = Number.MAX_VALUE;
+  const historyEntries = 500;
 
 
   const registeredProcessors = [
@@ -190,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         name: processor,
         startTime: undefined,
         finishTime: undefined,
-        steps: new RingBuffer<ImprovementWithIndex>(9)
+        steps: new RingBuffer<ImprovementWithIndex>(historyEntries)
       });
     }
 
