@@ -13,7 +13,7 @@ const isUsableCreator = <T>(creator: (arg: number) => T): void | never => {
 }
 
 const isTypedArray = (val: any) => Object.create(val.prototype) instanceof Object.getPrototypeOf(Int8Array).constructor;
-const isNormalArray = (val: any): val is ArrayConstructor => Object.create(val.prototype) instanceof Object.getPrototypeOf(Array).constructor;
+const isNormalArray = (val: any): val is ArrayConstructor => Object.create(val.prototype) instanceof Array;
 
 export const createHelper = <T, I>(
     creator: (args: number) => T,

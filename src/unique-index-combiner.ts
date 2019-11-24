@@ -18,6 +18,9 @@ export class UniqueIndexCombination implements UniqueIndexCombiner {
         checkParameter('letters', letters);
         checkParameter('places', places, 32);
 
+        this.places = places;
+        this.letters = letters;
+
         this.groupLength = getGroupLengthDefinition(this.letters, this.places);
         this.maxCombinations = amountOfCombinations(this.letters, this.places);
 
