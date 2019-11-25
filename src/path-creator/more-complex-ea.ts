@@ -1,15 +1,9 @@
-import { EvolutionaryAlgorithm, TSPIndividual, sortBest } from "./evolutionary-algorithm"
+import { EvolutionaryAlgorithm, TSPIndividual } from "./evolutionary-algorithm"
 import { TSPNode } from "../tsp-node";
-import { fisherYatesShuffle, shiftRandomRange, flipRandomSection, clamp } from "../helper";
-import { selectRandomX, recombineCopy, selectBestX, selectRandomPairsOf, recombineCrossXWMapping, recombineCrossXWMappingTSP, selectTournament, selectBestXPairs } from "../es-helper";
+import { fisherYatesShuffle, shiftRandomRange, flipRandomSection, clamp, switchRandomTwo } from "../helper";
+import { selectRandomX, recombineCopy, selectBestX, selectRandomPairsOf, recombineCrossXWMappingTSP, selectTournament, selectBestXPairs } from "../es-helper";
 
-export class MoreComplexEA extends EvolutionaryAlgorithm<TSPIndividual>{
-    public static readonly processorName = "MoreComplexEA";
-    protected readonly childrenSize = this.populationSize * 0.75 | 0;
-
-    protected readonly switchAmount = clamp(Math.floor(Math.log10(this.availableNodes.length)), 1, 3);
-    // protected readonly switchAmount = 1;
-
+abstract class EAWMutate extends EvolutionaryAlgorithm<TSPIndividual>{
     protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {
         const arr = new Array(this.populationSize);
 
@@ -18,6 +12,27 @@ export class MoreComplexEA extends EvolutionaryAlgorithm<TSPIndividual>{
 
         return arr;
     }
+
+    private chooseRandomMutate() {
+        switch (this.prng.randomInteger(0, 3)) {
+            case 0: return switchRandomTwo;
+            case 1: return shiftRandomRange;
+            case 2: return flipRandomSection;
+        }
+    }
+
+    protected mutate(individual: TSPIndividual): TSPIndividual {
+        let path = individual.phenotype;
+
+        for (let i = 0; i < this.mutationSize; i++)
+            path = this.chooseRandomMutate()(this.prng, path);
+
+        return { phenotype: path };
+    }
+}
+
+export class MoreComplexEA extends EAWMutate {
+    public static readonly processorName = "MoreComplexEA";
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
         return selectRandomX(individuals, this.childrenSize, this.prng).map(v => [v]);
@@ -27,46 +42,18 @@ export class MoreComplexEA extends EvolutionaryAlgorithm<TSPIndividual>{
         return recombineCopy(selected);
     }
 
-    protected mutate(individual: TSPIndividual): TSPIndividual {
-        // console.log('switchAmount', this.switchAmount);
-        let path = individual.phenotype;
-
-        if (this.prng.nextFloat() < 0.5)
-            for (let i = 0; i < this.switchAmount; i++)
-                path = shiftRandomRange(this.prng, path);
-        else
-            for (let i = 0; i < this.switchAmount; i++)
-                path = flipRandomSection(this.prng, path);
-
-        return { phenotype: path };
-    }
-
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {
         return selectBestX(individuals, this.populationSize);
     }
 }
 
-export class MoreComplexEAWRecomb extends EvolutionaryAlgorithm<TSPIndividual>{
+export class MoreComplexEAWRecomb extends EAWMutate {
     public static readonly processorName = "MoreComplexEAWRecomb";
-    protected readonly childrenSize = this.populationSize * 0.50 | 0;
 
     protected readonly crossover = [
         this.availableNodes.length * 1 / 3 | 0,
         this.availableNodes.length * 2 / 3 | 0
-    ]
-
-    // protected readonly switchAmount = clamp(this.availableNodes.length * 0.15 | 0, 1, 3);
-    // protected readonly switchAmount = 1;
-    protected readonly switchAmount = clamp(Math.floor(Math.log10(this.availableNodes.length)), 1, 3);
-
-    protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {
-        const arr = new Array(this.populationSize);
-
-        for (let i = 0; i < this.populationSize; i++)
-            arr[i] = { phenotype: fisherYatesShuffle(availableNodes, this.prng) };
-
-        return arr;
-    }
+    ];
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
         return selectRandomPairsOf(individuals, this.childrenSize, 2, this.prng);
@@ -76,49 +63,23 @@ export class MoreComplexEAWRecomb extends EvolutionaryAlgorithm<TSPIndividual>{
         return recombineCrossXWMappingTSP(selected[0], selected[1], this.crossover);
     }
 
-    protected mutate(individual: TSPIndividual): TSPIndividual {
-        // console.log('switchAmount', this.switchAmount);
-        let path = individual.phenotype;
-
-        const mutate = [shiftRandomRange, flipRandomSection][this.prng.randomInteger(0, 2)];
-
-        for (let i = 0; i < this.switchAmount; i++)
-            path = mutate(this.prng, path);
-
-        return { phenotype: path };
-    }
-
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {
         return selectBestX(individuals, this.populationSize);
     }
 }
 
-export class MoreComplexEAWTournament extends EvolutionaryAlgorithm<TSPIndividual>{
+export class MoreComplexEAWTournament extends EAWMutate {
     public static readonly processorName = "MoreComplexEAWTournament";
-    protected readonly childrenSize = this.populationSize * 0.50 | 0;
 
     protected readonly crossover = [
         this.availableNodes.length * 1 / 3 | 0,
         this.availableNodes.length * 2 / 3 | 0
-    ]
-
-    // protected readonly switchAmount = clamp(this.availableNodes.length * 0.15 | 0, 1, 3);
-    // protected readonly switchAmount = 1;
-    protected readonly switchAmount = clamp(Math.floor(Math.log10(this.availableNodes.length)), 1, 3);
+    ];
 
     protected getCurrentTournamentSize(strength = 0.05, individuals = this.populationSize) {
         const numberOfProgressSteps = this.calls.length
         const tournamentSizePerc = 1 - 1 / (strength * numberOfProgressSteps + 1);
-        return Math.floor(individuals * tournamentSizePerc);
-    }
-
-    protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {
-        const arr = new Array(this.populationSize);
-
-        for (let i = 0; i < this.populationSize; i++)
-            arr[i] = { phenotype: fisherYatesShuffle(availableNodes, this.prng) };
-
-        return arr;
+        return clamp(Math.floor(individuals * tournamentSizePerc), 2, individuals);
     }
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
@@ -127,18 +88,6 @@ export class MoreComplexEAWTournament extends EvolutionaryAlgorithm<TSPIndividua
 
     protected recombination(selected: TSPIndividual[]): TSPIndividual[] {
         return recombineCrossXWMappingTSP(selected[0], selected[1], this.crossover);
-    }
-
-    protected mutate(individual: TSPIndividual): TSPIndividual {
-        // console.log('switchAmount', this.switchAmount);
-        let path = individual.phenotype;
-
-        const mutate = [shiftRandomRange, flipRandomSection][this.prng.randomInteger(0, 2)];
-
-        for (let i = 0; i < this.switchAmount; i++)
-            path = mutate(this.prng, path);
-
-        return { phenotype: path };
     }
 
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {

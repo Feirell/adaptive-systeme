@@ -168,12 +168,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // const tries = 10 ** 6;
   const tries = Number.MAX_VALUE;
-  const historyEntries = 500;
+  // const tries = 100000;
+  const historyEntries = 100;
 
 
   const registeredProcessors = [
-    'BruteForce',
+    // 'BruteForce',
     'HillClimbing',
+    'SimulatedAnnealing',
     'SimpleEA',
     'MoreComplexEA',
     'MoreComplexEAWRecomb',
@@ -235,6 +237,4 @@ document.addEventListener('DOMContentLoaded', async () => {
   seedInputHelper(seedInput, val => (seed = val, clean()), seed);
   nodeAmountHelper(amountInput, val => (amount = val, clean()), amount);
   formElem.addEventListener('submit', ev => (ev.preventDefault(), start()));
-
-  start();
 });

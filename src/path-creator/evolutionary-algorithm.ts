@@ -1,4 +1,4 @@
-import { isPathBetter, pathCompare } from '../helper';
+import { isPathBetter, pathCompare, clamp } from '../helper';
 import { PathCreator } from './path-creator';
 import { TSPNode } from '../tsp-node';
 
@@ -24,7 +24,11 @@ const findBestIndividuum = (individuals: TSPIndividual[]) => {
 }
 
 export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> extends PathCreator {
-    protected readonly populationSize = 100;
+    protected readonly populationSize = 10;
+    protected readonly childrenSize = clamp(Math.floor(this.populationSize * 0.5), 1);
+    // protected readonly mutationSize = clamp(Math.floor(Math.log10(this.availableNodes.length)), 1, 3);
+    protected readonly mutationSize = 1;
+
     protected population: null | Individual[] = null;
 
     private finished = false;
@@ -36,10 +40,8 @@ export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> ex
 
         for (let tries = 0; tries < this.numberOfTries; tries++) {
             const current = this.doGeneration();
-            if (isPathBetter(current, this.lastBest)) {
+            if (isPathBetter(current, this.lastBest))
                 return this.lastBest = current;
-            } else if ((tries % 10000) == 0)
-                console.log('trying for', tries);
         }
 
         this.finished = true;

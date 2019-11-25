@@ -1,8 +1,7 @@
 // console.log('here is the worker!');
 import { WorkerHelper } from './worker-helper';
-import { PathCreator, PathCreatorConstructor } from './path-creator/path-creator';
-import modules from './path-creator/{brute-force,hill-climbing,simple-ea,more-complex-ea}.ts';
-import { TSPNode } from './tsp-node';
+import { PathCreatorConstructor } from './path-creator/path-creator';
+import modules from './path-creator/{brute-force,local-search,simple-ea,more-complex-ea}.ts';
 
 // console.log('processors', modules, typeof modules, modules instanceof Object);
 
@@ -36,7 +35,7 @@ const wh = new WorkerHelper();
     const processorInstance = new (processors.get(creator))(nodes, tries);
     for (const progress of processorInstance) {
         wh.sendMessage('progressed', progress);
-        await waitMs(50);
+        // await waitMs(50);
     }
 
     wh.sendMessage('finished');

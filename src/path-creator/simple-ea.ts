@@ -24,7 +24,7 @@ export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected mutate(individual: TSPIndividual): TSPIndividual {
-        let path = turnTwoAround(individual.phenotype, this.prng);
+        let path = turnTwoAround(this.prng, individual.phenotype);
         return { phenotype: path };
     }
 

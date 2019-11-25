@@ -65,20 +65,14 @@ function switchTwo<T>(arr: T[], a: number, b: number) {
   return copy;
 }
 
-export function switchRandomTwo<T>(arr: T[], prng?: PRNG) {
-  if (!prng)
-    prng = new PRNG(Math.random() * Number.MAX_SAFE_INTEGER);
-
+export function switchRandomTwo<T>(prng: PRNG, arr: T[], ) {
   const a = prng.randomInteger(0, arr.length);
   const b = prng.randomIntegerExcept(0, arr.length, a);
 
   return switchTwo(arr, a, b);
 }
 
-export function turnTwoAround<T>(arr: T[], prng?: PRNG) {
-  if (!prng)
-    prng = new PRNG(Math.random() * Number.MAX_SAFE_INTEGER);
-
+export function turnTwoAround<T>(prng: PRNG, arr: T[], ) {
   const a = prng.randomInteger(0, arr.length);
 
   return switchTwo(arr, a, (a + 1) % arr.length);
@@ -172,7 +166,7 @@ export function flipSection<T>(arr: T[], start: number, length: number) {
   return newArr;
 }
 
-export function clamp(value: number, min: number, max: number) {
+export function clamp(value: number, min: number, max: number = Infinity) {
   if (value < min)
     return min;
 
