@@ -9,7 +9,7 @@ export interface TSPIndividual {
 const individualCombination = (a: TSPIndividual, b: TSPIndividual) =>
     pathCompare(a.phenotype, b.phenotype);
 
-export const sortBest = (individuum: TSPIndividual[]) => Array.from(individuum).sort(individualCombination);
+export const sortBest = <T extends TSPIndividual>(individuum: T[]) => Array.from(individuum).sort(individualCombination);
 
 // const isIndividuumBetter = (a: TSPIndividual, b: TSPIndividual) => isPathBetter(a.phenotype, b.phenotype);
 

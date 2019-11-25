@@ -176,7 +176,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     'HillClimbing',
     'SimpleEA',
     'MoreComplexEA',
-    'MoreComplexEAWRecomb'
+    'MoreComplexEAWRecomb',
+    'MoreComplexEAWTournament'
   ];
 
   let algorithms: AlgorithmProgress[] = [];

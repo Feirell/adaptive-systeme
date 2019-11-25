@@ -1,5 +1,5 @@
 import { TSPIndividual, sortBest } from "./path-creator/evolutionary-algorithm";
-import { fisherYatesShuffle } from "./helper";
+import { fisherYatesShuffle, clamp } from "./helper";
 import { PRNG } from "./prng";
 
 export function recombineCopy<T extends TSPIndividual>(selected: T[]) {
@@ -35,6 +35,45 @@ export function selectRandomPairsOf<T extends TSPIndividual>(individuals: T[], g
 export function selectBestX<T extends TSPIndividual>(individuals: T[], amount: number) {
     return sortBest(individuals)
         .slice(0, amount)
+}
+
+export function selectBestXPairs<T extends TSPIndividual>(individuals: T[], amount: number) {
+    const selected = selectBestX(individuals, amount * 2);
+    // const selected = selectTournament(individuals, amount * 2, this.prng, this.getCurrentTournamentSize(), 1);
+
+    const pairs: TSPIndividual[][] = new Array(amount);
+
+    for (let i = 0; i < amount; i++)
+        pairs[i] = selected.slice(i * 2, i * 2 + 2);
+
+    return pairs;
+}
+
+export function selectTournament<T extends TSPIndividual>(
+    individuals: T[],
+    amount: number,
+    prng: PRNG,
+    tournamentSize: number = clamp(individuals.length * 0.1, 1, Infinity),
+    tournamentWinner: number = 1,
+    reuse = false
+) {
+    tournamentSize = Math.round(tournamentSize);
+
+    let ret: T[] = [];
+
+    individuals = fisherYatesShuffle(individuals, prng);
+
+    while (ret.length < amount) {
+        const winner = selectBestX(individuals.slice(0, tournamentSize), tournamentWinner);
+
+        ret = ret.concat(winner);
+
+        if (!reuse) {
+            individuals = individuals.filter(v => !winner.includes(v));
+        }
+    }
+
+    return ret;
 }
 
 export function recombineCrossXWMappingTSP<T extends TSPIndividual>(a: T, b: T, crossover: number[]): T[] {
