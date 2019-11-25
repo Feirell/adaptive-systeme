@@ -96,7 +96,28 @@ export const hillClimber = createLocalSearch('HillClimbing', function (history, 
     return getPathLength(last) > getPathLength(current);
 });
 
-export const simulatedAnnealing = createLocalSearch('SimulatedAnnealing', function (history, current) {
+export const simulatedAnnealing1 = createLocalSearch('SimulatedAnnealing 1', function (history, current) {
+    const prng = this.prng as PRNG;
+
+    const steps = history.length;
+    const last = history[history.length - 1];
+
+    const pathFitDistanceFactor = 0.0000000005;
+
+    const pathFitDistance = getPathLength(last) - getPathLength(current);
+
+    if (pathFitDistance > 0)
+        return true;
+    else {
+        const temperature = 0.95 ** steps;
+
+        const needsToBeSmallerThen = Math.pow(Math.E, - (-pathFitDistance * pathFitDistanceFactor) / temperature);
+
+        return prng.nextFloat() < needsToBeSmallerThen;
+    }
+});
+
+export const simulatedAnnealing2 = createLocalSearch('SimulatedAnnealing 2', function (history, current) {
     const prng = this.prng as PRNG;
 
     const steps = history.length;
