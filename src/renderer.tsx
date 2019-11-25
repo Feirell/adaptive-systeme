@@ -147,19 +147,20 @@ function ImplementationDisplay({ availableNodes, algorithm }: { availableNodes: 
   </div>
 }
 
-const isScrollableHeight = (elem: Element) =>
-  elem.scrollHeight <= elem.clientHeight
-
-const wasScrolledHeight = (elem: Element) =>
-  elem.scrollHeight - elem.scrollTop <= elem.clientHeight
-
 function createScrollSavePoint(match: string) {
-  const getElements = () => Array.from(document.querySelectorAll(match));
-  const wasScrolled = new WeakMap(getElements().map(e => [e, wasScrolledHeight(e) || isScrollableHeight(e)]));
+  const element = Array.from(document.querySelectorAll(match)) as (undefined | Element)[];
 
-  return function () {
-    for (const elem of getElements())
-      if (wasScrolled.get(elem))
+  for (let i = 0; i < element.length; i++) {
+    const elem = element[i] as Element;
+    // was scrolled to bottom
+    if (!(elem.scrollHeight - elem.clientHeight <= elem.scrollTop + 1)) // chrome needs the + 1 as error margin
+      element[i] = undefined;
+  }
+
+  return () => {
+    for (const elem of element)
+      if (elem !== undefined)
+        // scroll to bottom
         elem.scrollTop = elem.scrollHeight - elem.clientHeight;
   }
 }
