@@ -173,13 +173,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
   const registeredProcessors = [
-    // 'BruteForce',
-    'HillClimbing',
-    'SimulatedAnnealing',
-    'SimpleEA',
-    'MoreComplexEA',
-    'MoreComplexEAWRecomb',
-    'MoreComplexEAWTournament'
+    // 'brute force',
+    // 'hill climbing',
+    // 'simulated annealing 1',
+    'simulated annealing 2',
+    'threshold accepting',
+    'record to record',
+    'great deluge',
+    // 'EA simple',
+    // 'EA with select best',
+    'EA with recombination',
+    // 'EA with tournament',
   ];
 
   let algorithms: AlgorithmProgress[] = [];

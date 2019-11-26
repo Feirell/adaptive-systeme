@@ -1,6 +1,6 @@
 import { PathCreator } from "./path-creator";
 import { TSPNode } from "../tsp-node";
-import { getPathLength, switchRandomTwo } from '../helper';
+import { getPathLength, switchRandomTwo, getDistance, pathEqual } from '../helper';
 import { PRNG } from "../prng";
 
 abstract class LocalSearch<T> {
@@ -91,18 +91,18 @@ const createLocalSearch = (name: string, fnc: ConfigAcceptFunction) =>
         }
     }
 
-export const hillClimber = createLocalSearch('HillClimbing', function (history, current) {
+export const hillClimber = createLocalSearch('hill climbing', function (history, current) {
     const last = history[history.length - 1];
     return getPathLength(last) > getPathLength(current);
 });
 
-export const simulatedAnnealing1 = createLocalSearch('SimulatedAnnealing 1', function (history, current) {
+export const simulatedAnnealing1 = createLocalSearch('simulated annealing 1', function (history, current) {
     const prng = this.prng as PRNG;
 
     const steps = history.length;
     const last = history[history.length - 1];
 
-    const pathFitDistanceFactor = 0.0000000005;
+    const pathFitDistanceFactor = 0.00000000005;
 
     const pathFitDistance = getPathLength(last) - getPathLength(current);
 
@@ -117,7 +117,7 @@ export const simulatedAnnealing1 = createLocalSearch('SimulatedAnnealing 1', fun
     }
 });
 
-export const simulatedAnnealing2 = createLocalSearch('SimulatedAnnealing 2', function (history, current) {
+export const simulatedAnnealing2 = createLocalSearch('simulated annealing 2', function (history, current) {
     const prng = this.prng as PRNG;
 
     const steps = history.length;
@@ -137,4 +137,43 @@ export const simulatedAnnealing2 = createLocalSearch('SimulatedAnnealing 2', fun
 
         return prng.nextFloat() < needsToBeSmallerThen;
     }
+});
+
+export const thresholdAccepting = createLocalSearch('threshold accepting', function (history, current) {
+    const steps = history.length;
+    const last = history[history.length - 1];
+
+    const tMultiplier = 5200;
+
+    const pathFitDistance = getPathLength(last) - getPathLength(current);
+
+    if (pathFitDistance > 0)
+        return true;
+    else
+        return (-pathFitDistance) < tMultiplier * 0.99 ** steps;
+
+});
+
+export const recordToRecord = createLocalSearch('record to record', function (history, current) {
+    const steps = history.length;
+    const last = history[history.length - 1];
+
+    let best = history[0];
+    for (let i = 1; i < history.length; i++)
+        if (getPathLength(history[i]) < getPathLength(best))
+            best = history[i];
+
+    const tMultiplier = 5200;
+
+    const pathFitDistance = getPathLength(best) - getPathLength(current);
+
+    if (pathFitDistance > 0)
+        return true;
+    else
+        return (-pathFitDistance) < tMultiplier * 0.99 ** steps;
+
+});
+
+export const greatDeluge = createLocalSearch('great deluge', function (history, current) {
+    return getPathLength(current) < 100000 / (1 + 0.05 * history.length);
 });
