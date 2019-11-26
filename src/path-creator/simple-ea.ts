@@ -4,7 +4,7 @@ import { fisherYatesShuffle, turnTwoAround } from "../helper";
 import { recombineCopy, selectBestX, selectRandomX } from "../es-helper";
 
 export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
-    public static readonly processorName = "SimpleEA";
+    public static readonly processorName = "EA simple";
     protected readonly childrenSize = (this.populationSize * 0.75) | 0;
 
     protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {

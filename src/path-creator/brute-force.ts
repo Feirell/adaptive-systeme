@@ -4,7 +4,7 @@ import { getPathLength } from '../helper';
 import { UniqueItemCombination } from '../unique-item-combiner';
 
 export class BruteForce extends PathCreator {
-  public static readonly processorName = "BruteForce";
+  public static readonly processorName = "brute force";
 
   private readonly allCombination = new UniqueItemCombination(this.availableNodes.slice(0));
   private shortestLength: number;

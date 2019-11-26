@@ -32,7 +32,7 @@ abstract class EAWMutate extends EvolutionaryAlgorithm<TSPIndividual>{
 }
 
 export class MoreComplexEA extends EAWMutate {
-    public static readonly processorName = "MoreComplexEA";
+    public static readonly processorName = "EA with select best";
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
         return selectRandomX(individuals, this.childrenSize, this.prng).map(v => [v]);
@@ -48,7 +48,7 @@ export class MoreComplexEA extends EAWMutate {
 }
 
 export class MoreComplexEAWRecomb extends EAWMutate {
-    public static readonly processorName = "MoreComplexEAWRecomb";
+    public static readonly processorName = "EA with recombination";
 
     protected readonly crossover = [
         this.availableNodes.length * 1 / 3 | 0,
@@ -69,7 +69,7 @@ export class MoreComplexEAWRecomb extends EAWMutate {
 }
 
 export class MoreComplexEAWTournament extends EAWMutate {
-    public static readonly processorName = "MoreComplexEAWTournament";
+    public static readonly processorName = "EA with tournament";
 
     protected readonly crossover = [
         this.availableNodes.length * 1 / 3 | 0,
