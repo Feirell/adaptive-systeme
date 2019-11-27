@@ -85,7 +85,7 @@ export class Particleswarm {
         const newPosition = [0, 0];
 
         for (let i = 0; i < 2; i++)
-            newPosition[i] = p.position[i] + p.velocity[0];
+            newPosition[i] = p.position[i] + p.velocity[i];
 
         return newPosition as Particle['position'];
     }
