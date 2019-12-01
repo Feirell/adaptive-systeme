@@ -89,6 +89,7 @@ function createTSPWithRandomPoints(countNodes: number, width: number, height: nu
 
   for (let i = 0; i < countNodes; i++)
     nodes[i] = new TSPNode(
+      i,
       indexToLetter(i, identifierLength),
       prng.randomInteger(0, width),
       prng.randomInteger(0, height)
