@@ -1,7 +1,7 @@
 {
   "scripts": {
-    "start": "parcel index.html",
-    "prod": "parcel build index.html --no-source-maps --public-url ./"
+    "start": "parcel serve tsp.html particleswarm.html index.html",
+    "prod": "parcel build tsp.html particleswarm.html index.html --no-source-maps --public-url ./"
   },
   "dependencies": {
     "chainable-error": "^1.0.1",

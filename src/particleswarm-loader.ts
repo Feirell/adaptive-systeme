@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const bestGlobalPrintable = '(' + ps.calculateBestGlobal(ps.particles).map(nrFrmt).join(', ') + ')';
 
-        const currentStep = ++cycleStep;
+        cycleStep++;
 
         const generalPrint = 'Step: ' + cycleStep + ' best is ' + bestGlobalPrintable + ' we changed spread by ' + nrFrmt(spreadChange);
 
