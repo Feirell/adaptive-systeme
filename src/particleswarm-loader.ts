@@ -74,6 +74,10 @@ const drawParticles = (imageData: ImageData, particles: Particle[], scale: numbe
     return imageData;
 }
 
+const nrFrmt = (() =>
+    new Intl.NumberFormat('en', { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format
+)()
+
 document.addEventListener('DOMContentLoaded', () => {
     const mainElement = document.getElementsByTagName('main')[0];
     const canvasElement = document.getElementsByTagName('canvas')[0] as HTMLCanvasElement;
@@ -108,11 +112,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const copy = imageData.data.slice(0);
 
-    let k = 10;
-    const loop = () => {
+    const stopChangeWhenDeltaLess = 5;
+    let cycleStep = 0;
+
+    const doCycle = () => {
         imageData.data.set(copy);
-        ps.updateParticles();
+
+        const spreadChange = ps.updateParticles();
         context.putImageData(drawParticles(imageData, ps.particles, scale), 0, 0);
+
+        const bestGlobalPrintable = '(' + ps.calculateBestGlobal(ps.particles).map(nrFrmt).join(', ') + ')';
+
+        const currentStep = ++cycleStep;
+
+        const generalPrint = 'Step: ' + cycleStep + ' best is ' + bestGlobalPrintable + ' we changed spread by ' + nrFrmt(spreadChange);
+
+        if (Math.abs(spreadChange) < stopChangeWhenDeltaLess) {
+            console.log('%cFINISHED%c ' + generalPrint + ' break update cycle since we reached a spread change under ' + stopChangeWhenDeltaLess, 'color: lightgreen', 'color:unset');
+            clearInterval(interval);
+        } else {
+            console.log('%cCONTINUE%c ' + generalPrint + ' continue to update particles', 'color:cyan', 'color:unset');
+        }
+    }
+
+    const interval = setInterval(doCycle, 750);
+
+    const loop = () => {
+        // doCycle()
         requestAnimationFrame(loop);
     };
 

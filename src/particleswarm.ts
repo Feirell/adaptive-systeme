@@ -90,16 +90,42 @@ export class Particleswarm {
         return newPosition as Particle['position'];
     }
 
+    calculateSpread() {
+        const rating: number[] = new Array(this.particles.length);
+        let mediumRating = 0;
+
+        for (let i = 0; i < this.particles.length; i++) {
+            const currentRating = this.ratingFnc(this.particles[i].position);;
+            rating[i] = currentRating;
+            mediumRating += currentRating;
+        }
+
+        mediumRating /= this.particles.length;
+
+        let spread = 0;
+
+        for (let i = 0; i < rating.length; i++)
+            spread += Math.abs(rating[i] - mediumRating);
+
+        return spread /= rating.length;
+    }
+
     updateParticles(particles = this.particles) {
+        const spreadBefore = this.calculateSpread();
+
         for (const particle of particles) {
             particle.velocity = this.calculateNewVelocity(particle);
             particle.position = this.calculateNewPosition(particle);
             particle.bestLocal = this.calculateBestLocal(particle);
         }
 
+        const spreadAfter = this.calculateSpread();
+
         const best = this.calculateBestGlobal(particles);
 
         for (const particle of particles)
             particle.bestGlobal = best;
+
+        return spreadBefore - spreadAfter;
     }
 }
