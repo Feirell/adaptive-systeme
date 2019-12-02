@@ -1,3 +1,5 @@
+import { IteratorAndIterable } from "./iterator-helper";
+
 const isUsableCreator = <T>(creator: (arg: number) => T): void | never => {
     let couldUse = false;
     try {
@@ -67,8 +69,6 @@ export const createHelper = <T, I>(
 }
 
 export const NumberHelper = createHelper<number, number[]>(Number, Array);
-
-export interface IteratorAndIterable<T> extends Iterator<T, T>, Iterable<T> { }
 
 export interface UniqueIndexCombiner<
     IndexType = number,

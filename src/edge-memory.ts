@@ -1,4 +1,5 @@
 import { TSPNode } from "./tsp-node";
+import { IteratorAndIterable, produceIteratorAndIterable } from "./iterator-helper";
 
 const sum = (n: number) => n * (n + 1) * 0.5;
 
@@ -91,9 +92,13 @@ class HalfMatrix<T, D = null> implements Iterable<IterationReturnValue<T>>{
     }
 }
 
-type TSPEdgeMemoryIteratorResult<T> = [{ a: TSPNode, b: TSPNode }, T];
+export interface Edge<T, N = TSPNode> {
+    a: N;
+    b: N;
+    edgeInformation: T;
+}
 
-export class TSPEdgeMemory<T> implements Iterable<TSPEdgeMemoryIteratorResult<T>> {
+export class TSPEdgeMemory<T> implements Iterable<Edge<T>> {
     private readonly backing: HalfMatrix<T>;
     private readonly nodeMap: Map<TSPNode, number>;
 
@@ -133,12 +138,39 @@ export class TSPEdgeMemory<T> implements Iterable<TSPEdgeMemoryIteratorResult<T>
         );
     }
 
-    forEach(fnc: (a: TSPNode, b: TSPNode, value: T, instance: TSPEdgeMemory<T>) => void, thisParam: any = null) {
+    forEach(fnc: (edge: Edge<T>, instance: TSPEdgeMemory<T>) => void, thisParam: any = null) {
         for (const ite of this)
-            fnc.call(thisParam, ite[0].a, ite[0].b, ite[1], this);
+            fnc.call(thisParam, ite, this);
     }
 
-    [Symbol.iterator](): Iterator<TSPEdgeMemoryIteratorResult<T>> {
+    allConnectedNodes(to: TSPNode): (Iterable<TSPNode> & Iterator<TSPNode>) {
+        const idForNode = this.getIdForNode(to);
+        const max = this.nodeMap.size;
+        let index = 0;
+
+        const iter = {
+            next: () => {
+                if (index == idForNode)
+                    index++;
+
+                const done = index >= max;
+
+                return { done, value: done ? undefined as any : this.getNodeForId(index) };
+            },
+            [Symbol.iterator]: () => iter
+        };
+
+        return iter;
+    }
+
+    allEdgesTo(to: TSPNode): IteratorAndIterable<Edge<T>> {
+        const backing = this.allConnectedNodes()
+        produceIteratorAndIterable(() => {
+
+        })
+    }
+
+    [Symbol.iterator](): Iterator<Edge<T>> {
         const backingIte = this.backing[Symbol.iterator]();
 
         return {
@@ -149,16 +181,13 @@ export class TSPEdgeMemory<T> implements Iterable<TSPEdgeMemoryIteratorResult<T>
                 } else {
                     return {
                         done: false,
-                        value: [
-                            {
-                                a: this.getNodeForId(curr.value[0].row),
-                                b: this.getNodeForId(curr.value[0].column)
-                            },
-                            curr[1]
-                        ]
+                        value: {
+                            a: this.getNodeForId(curr.value[0].row),
+                            b: this.getNodeForId(curr.value[0].column),
+                            edgeInformation: curr[1]
+                        }
                     }
                 }
             }
         }
     }
-}

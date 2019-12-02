@@ -1,7 +1,31 @@
 import { PRNG } from './prng';
 import { TSPNode } from './tsp-node';
 
+export function getBest<T, K>(
+  collection: T[],
+  calculateFitting: (val: T, index: number) => K,
+  isBetter: (a: K, b: K, aIndex: number, bIndex: number) => boolean
+) {
+  let bestIndex: number = undefined as any;
+  let bestValue: T = undefined as any;
+  let bestFit: K = undefined as any;
+
+  for (let i = 0; i < collection.length; i++) {
+    const currentValue = collection[i];
+    const currentFit = calculateFitting(currentValue, i);
+
+    if (i == 0 || isBetter(currentFit, bestFit, i, bestIndex)) {
+      bestIndex = i;
+      bestValue = currentValue;
+      bestFit = currentFit;
+    }
+  }
+
+  return bestValue;
+}
+
 const { abs, pow, sqrt } = Math;
+
 export function getDistance(a: TSPNode, b: TSPNode): number {
   return sqrt(pow(abs(a.x - b.x), 2) + pow(abs(a.y - b.y), 2))
 }
@@ -152,7 +176,6 @@ export function flipRandomSection<T>(prng: PRNG, arr: T[]) {
 }
 
 export function flipSection<T>(arr: T[], start: number, length: number) {
-  // console.log('flip section was called')
   const newArr = arr.slice(0);
 
   for (let i = 0; i < Math.floor(length / 2); i++) {
@@ -174,4 +197,18 @@ export function clamp(value: number, min: number, max: number = Infinity) {
     return max;
 
   return value;
+}
+
+export function containsEdge(path: TSPNode[], a: TSPNode, b: TSPNode) {
+  const aIndex = path.indexOf(a);
+
+  const beforeIndex = (path.length + aIndex - 1) % path.length
+  if (path[beforeIndex] == b)
+    return true;
+
+  const afterIndex = (aIndex + 1) % path.length;
+  if (path[afterIndex] == b)
+    return true;
+
+  return false;
 }
