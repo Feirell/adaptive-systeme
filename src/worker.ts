@@ -1,20 +1,5 @@
-// console.log('here is the worker!');
 import { WorkerHelper } from './worker-helper';
-import { PathCreatorConstructor } from './path-creator/path-creator';
-import modules from './path-creator/{brute-force,local-search,simple-ea,more-complex-ea,ant-colony}.ts';
-
-// console.log('processors', modules, typeof modules, modules instanceof Object);
-
-
-const processors = new Map<string, PathCreatorConstructor>();
-
-for (const module of Object.values(modules))
-    for (const processor of Object.values(module))
-        if (typeof processor == 'function')
-            if (processors.has(processor.processorName))
-                throw new Error('processor ' + processor.processorName + 'was already registered');
-            else
-                processors.set(processor.processorName, processor);
+import processors from './path-creator-loader';
 
 const waitMs = (ms: number) => new Promise(res => setTimeout(res, ms));
 

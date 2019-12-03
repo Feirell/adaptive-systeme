@@ -85,3 +85,49 @@ export function nodeAmountHelper(inputElem: HTMLInputElement, amountChanged: (ne
 
     inputElem.addEventListener('input', handleChange);
 }
+
+export function chooseHelper(wrapper: HTMLElement, selectedChanged: (selected: string[], action: 'deselected' | 'selected', name: string) => void, available: string[], selected: boolean[] = new Array(available.length).fill(false)) {
+    const cleanedAvailable: string[] = [];
+    const cleanedSelected: boolean[] = [];
+
+    for (let i = 0; i < available.length; i++) {
+        if (typeof available[i] != 'string' || cleanedAvailable.indexOf(available[i]) != -1)
+            continue;
+
+        cleanedAvailable.push(available[i]);
+        cleanedSelected.push(selected[i]);
+    }
+
+    const createListener = (nr: number, input: HTMLInputElement) => {
+        cleanedSelected[nr] = input.checked
+
+        return () => {
+            const state = cleanedSelected[nr] = input.checked
+
+            const buildList = [];
+
+            for (let i = 0; i < cleanedAvailable.length; i++)
+                if (cleanedSelected[i])
+                    buildList.push(cleanedAvailable[i]);
+
+            selectedChanged(buildList, state ? 'selected' : 'deselected', cleanedAvailable[nr]);
+        };
+    }
+
+    for (let i = 0; i < cleanedAvailable.length; i++) {
+        const id = 'choose-' + i + '-' + cleanedAvailable[i];
+
+        const input = document.createElement('input');
+        input.setAttribute('type', 'checkbox');
+        input.setAttribute('id', id);
+        input.addEventListener('input', createListener(i, input));
+
+        const label = document.createElement('label');
+        label.setAttribute('for', id);
+        label.innerText = cleanedAvailable[i];
+
+        const lineWrapper = document.createElement('div');
+        lineWrapper.append(input, label);
+        wrapper.append(lineWrapper);
+    }
+}

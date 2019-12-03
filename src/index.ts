@@ -1,4 +1,4 @@
-import { seedInputHelper, nodeAmountHelper } from './input-helper';
+import { seedInputHelper, nodeAmountHelper, chooseHelper } from './input-helper';
 import { RingBuffer } from './ring-buffer';
 import { Error as ChainableError } from 'chainable-error';
 import { render } from './renderer';
@@ -6,6 +6,8 @@ import { PRNG } from './prng';
 import { TSPNode } from './tsp-node';
 
 import { WorkerHelper, TransferError } from './worker-helper';
+
+import processor from './path-creator-loader';
 
 interface ProcessListener { (ev: { path: TSPNode[], ts: number }): void }
 
@@ -148,6 +150,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   const amountInput = document.querySelector('#amount') as HTMLInputElement;
   const mainElem = document.querySelector('main') as HTMLElement;
   const formElem = document.querySelector('form') as HTMLFormElement;
+  const chooseAlgorithElem = document.querySelector('.choose-algorithm') as HTMLDivElement;
 
   let seed = 0x122312;
   let amount = 2;
@@ -172,30 +175,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const historyEntries = 100;
 
 
-  const registeredProcessors = [
-    // 'brute force',
-    // 'hill climbing',
-    // 'simulated annealing 1',
-    // 'simulated annealing 2',
-    // // 'threshold accepting',
-    // // 'record to record',
-    // // 'great deluge',
-    // 'EA simple',
-    // 'EA with select best',
-    'EA with recombination',
-    'ant colony with all',
-    'ant colony with best'
-    // 'EA with tournament',
-  ];
+  const registeredProcessors = Array.from(processor.keys());
 
   let algorithms: AlgorithmProgress[] = [];
+
+  let usedProcessors: string[] = [];
 
   const clean = () => {
     tsp = createTSPWithRandomPoints(amount, width, height, new PRNG(seed));
 
     algorithms = [];
 
-    for (const processor of registeredProcessors) {
+    for (const processor of usedProcessors) {
       algorithms.push({
         name: processor,
         startTime: undefined,
@@ -243,6 +234,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   seedInputHelper(seedInput, val => (seed = val, clean()), seed);
   nodeAmountHelper(amountInput, val => (amount = val, clean()), amount);
   formElem.addEventListener('submit', ev => (ev.preventDefault(), start()));
+
+  chooseHelper(chooseAlgorithElem, (chosen) => (usedProcessors = chosen, clean()), registeredProcessors);
 
   start();
 });
