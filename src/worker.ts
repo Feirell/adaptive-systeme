@@ -1,7 +1,7 @@
 // console.log('here is the worker!');
 import { WorkerHelper } from './worker-helper';
 import { PathCreatorConstructor } from './path-creator/path-creator';
-import modules from './path-creator/{brute-force,local-search,simple-ea,more-complex-ea}.ts';
+import modules from './path-creator/{brute-force,local-search,simple-ea,more-complex-ea,ant-colony}.ts';
 
 // console.log('processors', modules, typeof modules, modules instanceof Object);
 
