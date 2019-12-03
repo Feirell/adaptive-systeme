@@ -1,4 +1,4 @@
-import { getDistance, getBest, getPathLength, containsEdge } from '../helper';
+import { getDistance, getBest, getPathLength, containsEdge, isPathBetter } from '../helper';
 import { PathCreator } from './path-creator';
 import { TSPNode } from '../tsp-node';
 import { TSPEdgeMemory, Edge } from '../edge-memory';
@@ -8,16 +8,18 @@ interface EdgeInformation {
     heuristically: number;
 }
 
-export class AntColony extends PathCreator {
-    public static readonly processorName = "ant colony";
-    private readonly alpha = 1;
-    private readonly beta = 1;
-    private readonly evaporationRate = 0.4;
-    private readonly fitScale = 0.2;
+export abstract class AntColony extends PathCreator {
+    protected alpha = 2;
+    protected beta = 5;
 
-    private numberOfAnts: number;
+    protected evaporationRate: number;
+    protected fitScale: number;
 
-    private edgeInformations: TSPEdgeMemory<EdgeInformation>;
+    protected lastBest: TSPNode[];
+
+    protected numberOfAnts: number;
+
+    protected edgeInformations: TSPEdgeMemory<EdgeInformation>;
 
     setAvailableNodes(availableNodes: TSPNode[]) {
         this.availableNodes = availableNodes;
@@ -90,21 +92,13 @@ export class AntColony extends PathCreator {
         return path;
     }
 
-    protected calculateNewPheromoneForEdge(edge: Edge<EdgeInformation>, paths: TSPNode[][]) {
-        let heuristicSum = 0;
-
-        for (const path of paths)
-            if (containsEdge(path, edge.a, edge.b))
-                heuristicSum += 1 / getPathLength(path);
-
-        return (1 - this.evaporationRate) * edge.edgeInformation.pheromone + this.evaporationRate * this.fitScale * heuristicSum;
-    }
+    protected abstract calculateNewPheromoneForEdge(edge: Edge<EdgeInformation>, paths: TSPNode[][]);
 
     protected updateEdgePheromone(edge: Edge<EdgeInformation>, paths: TSPNode[][]) {
         edge.edgeInformation.pheromone = this.calculateNewPheromoneForEdge(edge, paths);
     }
 
-    protected step(): TSPNode[] {
+    protected doAntEvolution() {
         const paths = new Array(this.numberOfAnts);
 
         for (let i = 0; i < this.numberOfAnts; i++)
@@ -116,7 +110,52 @@ export class AntColony extends PathCreator {
         return getBest(paths, getPathLength, (a, b) => a < b);
     }
 
+    protected step(): TSPNode[] {
+        let best;
+
+        do {
+            best = this.doAntEvolution();
+        } while (this.lastBest && !isPathBetter(best, this.lastBest))
+
+        return this.lastBest = best;
+    }
+
     protected isFinished(): boolean {
         return false;
+    }
+}
+
+export class AntColonyWAll extends AntColony {
+    public static readonly processorName = "ant colony with all";
+
+    protected evaporationRate = 0.5;
+    protected fitScale = 0.05;
+
+    protected calculateNewPheromoneForEdge(edge: Edge<EdgeInformation, TSPNode>, paths: TSPNode[][]) {
+        let heuristicSum = 0;
+
+        for (const path of paths)
+            if (containsEdge(path, edge.a, edge.b))
+                heuristicSum += 1 / getPathLength(path);
+
+        return (1 - this.evaporationRate) * edge.edgeInformation.pheromone + this.evaporationRate * this.fitScale * heuristicSum;
+    }
+}
+
+export class AntColonyWBest extends AntColony {
+    public static readonly processorName = "ant colony with best";
+
+    protected evaporationRate = 0.1;
+    protected fitScale = 0.5;
+
+    protected calculateNewPheromoneForEdge(edge: Edge<EdgeInformation, TSPNode>, paths: TSPNode[][]) {
+        let heuristicSum = 0;
+
+        const path = getBest(paths, getPathLength, (a, b) => a < b);
+
+        if (containsEdge(path, edge.a, edge.b))
+            heuristicSum += 1 / getPathLength(path);
+
+        return (1 - this.evaporationRate) * edge.edgeInformation.pheromone + this.evaporationRate * this.fitScale * heuristicSum;
     }
 }

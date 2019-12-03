@@ -176,14 +176,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 'brute force',
     // 'hill climbing',
     // 'simulated annealing 1',
-    'simulated annealing 2',
+    // 'simulated annealing 2',
     // // 'threshold accepting',
     // // 'record to record',
     // // 'great deluge',
     // 'EA simple',
     // 'EA with select best',
     'EA with recombination',
-    'ant colony'
+    'ant colony with all',
+    'ant colony with best'
     // 'EA with tournament',
   ];
 
@@ -242,4 +243,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   seedInputHelper(seedInput, val => (seed = val, clean()), seed);
   nodeAmountHelper(amountInput, val => (amount = val, clean()), amount);
   formElem.addEventListener('submit', ev => (ev.preventDefault(), start()));
+
+  start();
 });
