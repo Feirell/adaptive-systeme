@@ -72,8 +72,10 @@ export function pathEqual(pathA: TSPNode[], pathB: TSPNode[]) {
   if (pathA.length != pathB.length)
     return false;
 
+  const offsetB = pathB.indexOf(pathA[0]);
+
   for (let i = 0; i < pathA.length; i++)
-    if (pathA[i].name != pathB[i].name)
+    if (pathA[i].name != pathB[(offsetB + i) % pathA.length].name)
       return false;
 
   return true;
