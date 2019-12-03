@@ -25,6 +25,37 @@ body {
     & > button {
       margin: 10px 0px;
     }
+
+    .choose-algorithm {
+      margin: 10px 0px;
+      &:hover {
+        > div:not(:hover) {
+          &.chosen {
+            opacity: 0.6;
+          }
+
+          &:not(.chosen) {
+            opacity: 0.3;
+          }
+        }
+      }
+
+      > div {
+        transition: opacity 0.14s;
+        &:not(:first-child) {
+          margin-top: 3px;
+        }
+        label {
+          margin-left: 3px;
+          cursor: pointer;
+        }
+        input {
+          cursor: pointer;
+        }
+        display: flex;
+        align-items: flex-start;
+      }
+    }
   }
 
   & > main {

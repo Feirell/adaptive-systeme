@@ -102,7 +102,9 @@ export function chooseHelper(wrapper: HTMLElement, selectedChanged: (selected: s
         cleanedSelected[nr] = input.checked
 
         return () => {
-            const state = cleanedSelected[nr] = input.checked
+            const state = cleanedSelected[nr] = input.checked;
+
+            (input.parentElement as Element).classList[state ? 'add' : 'remove']('chosen');
 
             const buildList = [];
 
