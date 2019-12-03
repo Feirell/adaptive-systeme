@@ -177,12 +177,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 'hill climbing',
     // 'simulated annealing 1',
     'simulated annealing 2',
-    'threshold accepting',
-    'record to record',
-    'great deluge',
+    // // 'threshold accepting',
+    // // 'record to record',
+    // // 'great deluge',
     // 'EA simple',
     // 'EA with select best',
     'EA with recombination',
+    'ant colony'
     // 'EA with tournament',
   ];
 
