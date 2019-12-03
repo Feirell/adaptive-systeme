@@ -9,24 +9,28 @@ interface EdgeInformation {
 }
 
 export class AntColony extends PathCreator {
+    public static readonly processorName = "ant colony";
     private readonly alpha = 1;
     private readonly beta = 1;
-    private readonly evaporationRate = 0.2;
+    private readonly evaporationRate = 0.4;
     private readonly fitScale = 0.2;
+
+    private numberOfAnts: number;
 
     private edgeInformations: TSPEdgeMemory<EdgeInformation>;
 
     setAvailableNodes(availableNodes: TSPNode[]) {
         this.availableNodes = availableNodes;
         this.edgeInformations = new TSPEdgeMemory(availableNodes);
+        this.numberOfAnts = availableNodes.length;
         this.initializeEdges();
     }
 
     protected initializeEdges() {
-        this.edgeInformations.forEach((a, b) => {
-            this.edgeInformations.set(a, b, {
+        this.edgeInformations.forEach((edge) => {
+            this.edgeInformations.set(edge.a, edge.b, {
                 pheromone: this.prng.nextFloat(),
-                heuristically: 1 / getDistance(a, b)
+                heuristically: 1 / getDistance(edge.a, edge.b)
             });
         });
     }
@@ -53,38 +57,38 @@ export class AntColony extends PathCreator {
         return probabilityPairs;
     }
 
-    protected calculatePathForAnts(ants: number): TSPNode[][] {
-        const paths = [];
-        for (let i = 0; i < ants; i++) {
-            const remainingNodes = this.availableNodes.slice(0);
+    protected calculatePathWithAnt(startingWith: number | TSPNode) {
+        const remainingNodes = this.availableNodes.slice(0);
 
-            const path = remainingNodes.splice(i % remainingNodes.length, 1);
+        const startIndex = typeof startingWith == 'number' ?
+            startingWith % remainingNodes.length :
+            remainingNodes.indexOf(startingWith);
 
-            for (let k = 1; k < this.availableNodes.length; k++) {
-                const next = this.prng.nextFloat();
+        if (startIndex < 0)
+            throw new Error('starting node not found');
 
-                let probSum = 0;
-                let current = undefined;
+        const path = remainingNodes.splice(startIndex, 1);
 
-                for (const pair of this.calculateProbabilityForConnected(path[k - 1], remainingNodes)) {
-                    probSum += pair.probability;
-                    current = pair.other;
+        for (let k = 1; k < this.availableNodes.length; k++) {
+            const next = this.prng.nextFloat();
 
-                    if (probSum >= next)
-                        break;
-                }
+            let probSum = 0;
+            let current = undefined;
 
-                remainingNodes.splice(remainingNodes.indexOf(current), 1);
-                path.push(current);
+            for (const pair of this.calculateProbabilityForConnected(path[k - 1], remainingNodes)) {
+                probSum += pair.probability;
+                current = pair.other;
+
+                if (probSum >= next)
+                    break;
             }
 
-            paths.push(path);
+            remainingNodes.splice(remainingNodes.indexOf(current), 1);
+            path.push(current);
         }
 
-        return paths;
+        return path;
     }
-
-
 
     protected calculateNewPheromoneForEdge(edge: Edge<EdgeInformation>, paths: TSPNode[][]) {
         let heuristicSum = 0;
@@ -97,21 +101,22 @@ export class AntColony extends PathCreator {
     }
 
     protected updateEdgePheromone(edge: Edge<EdgeInformation>, paths: TSPNode[][]) {
-
-        // this.edgeInformations.forEach((a, b, ei) => {
-        //     ei.pheromone = this.calculateNewPheromoneAllContaining(ei.pheromone, paths.filter(p => containsEdge(p, a, b)))
-        // })
+        edge.edgeInformation.pheromone = this.calculateNewPheromoneForEdge(edge, paths);
     }
 
     protected step(): TSPNode[] {
-        const paths = this.calculatePathForAnts(this.availableNodes.length);
+        const paths = new Array(this.numberOfAnts);
 
-        this.updatePheromonePheromone
+        for (let i = 0; i < this.numberOfAnts; i++)
+            paths[i] = this.calculatePathWithAnt(i);
+
+        for (const edge of this.edgeInformations)
+            this.updateEdgePheromone(edge, paths);
 
         return getBest(paths, getPathLength, (a, b) => a < b);
     }
 
     protected isFinished(): boolean {
-        throw new Error("Method not implemented.");
+        return false;
     }
 }
