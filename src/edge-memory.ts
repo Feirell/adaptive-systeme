@@ -1,5 +1,5 @@
 import { TSPNode } from "./tsp-node";
-import { IteratorAndIterable, produceIteratorAndIterable } from "./iterator-helper";
+import { IteratorAndIterable, produceIteratorAndIterable, extendIterable } from "./iterator-helper";
 
 const sum = (n: number) => n * (n + 1) * 0.5;
 
@@ -68,27 +68,25 @@ class HalfMatrix<T, D = null> implements Iterable<IterationReturnValue<T>>{
      * A
      * 
      */
-    [Symbol.iterator](): Iterator<IterationReturnValue<T>> {
+    [Symbol.iterator]() {
         let column = 0;
         let row = this.dimension - 1;
 
-        return {
-            next: () => {
-                const done = row <= 0;
+        return produceIteratorAndIterable<IterationReturnValue<T>>(() => {
+            const done = row <= 0;
 
-                const ret = { done, value: done ? undefined as any : [{ row, column }, this.get(column, row)] as IterationReturnValue<T> }
+            const ret = { done, value: done ? undefined as any : [{ row, column }, this.get(column, row)] as IterationReturnValue<T> }
 
-                if (!done) {
-                    column++;
-                    if (column >= row) {
-                        row--;
-                        column = 0;
-                    }
+            if (!done) {
+                column++;
+                if (column >= row) {
+                    row--;
+                    column = 0;
                 }
-
-                return ret;
             }
-        }
+
+            return ret;
+        });
     }
 }
 
@@ -100,9 +98,11 @@ export interface Edge<T, N = TSPNode> {
 
 export class TSPEdgeMemory<T> implements Iterable<Edge<T>> {
     private readonly backing: HalfMatrix<T>;
-    private readonly nodeMap: Map<TSPNode, number>;
+    private readonly nodeMap: Map<TSPNode, number> = new Map();
 
     constructor(nodes: TSPNode[]) {
+        this.backing = new HalfMatrix(nodes.length);
+
         let i = 0;
         for (const node of nodes)
             this.nodeMap.set(node, i++);
@@ -143,51 +143,38 @@ export class TSPEdgeMemory<T> implements Iterable<Edge<T>> {
             fnc.call(thisParam, ite, this);
     }
 
-    allConnectedNodes(to: TSPNode): (Iterable<TSPNode> & Iterator<TSPNode>) {
-        const idForNode = this.getIdForNode(to);
+    allConnectedNodes(to: TSPNode) {
+        const toIndex = this.getIdForNode(to);
         const max = this.nodeMap.size;
         let index = 0;
 
-        const iter = {
-            next: () => {
-                if (index == idForNode)
-                    index++;
+        return produceIteratorAndIterable<TSPNode>(() => {
+            // skip the to node
+            if (index == toIndex)
+                index++;
 
-                const done = index >= max;
+            const done = index >= max;
 
-                return { done, value: done ? undefined as any : this.getNodeForId(index) };
-            },
-            [Symbol.iterator]: () => iter
-        };
-
-        return iter;
+            return { done, value: done ? undefined : this.getNodeForId(index++) };
+        });
     }
 
     allEdgesTo(to: TSPNode): IteratorAndIterable<Edge<T>> {
-        const backing = this.allConnectedNodes()
-        produceIteratorAndIterable(() => {
-
-        })
+        return extendIterable(this.allConnectedNodes(to), (val: TSPNode) => ({
+            a: to,
+            b: val,
+            edgeInformation: this.get(to, val)
+        }));
     }
 
-    [Symbol.iterator](): Iterator<Edge<T>> {
-        const backingIte = this.backing[Symbol.iterator]();
-
-        return {
-            next: () => {
-                const curr = backingIte.next();
-                if (curr.done) {
-                    return { done: true, value: undefined as any }
-                } else {
-                    return {
-                        done: false,
-                        value: {
-                            a: this.getNodeForId(curr.value[0].row),
-                            b: this.getNodeForId(curr.value[0].column),
-                            edgeInformation: curr[1]
-                        }
-                    }
-                }
+    [Symbol.iterator]() {
+        const iterator = this.backing[Symbol.iterator]();
+        return extendIterable(iterator, (val): Edge<T> => {
+            return {
+                a: this.getNodeForId(val[0].row),
+                b: this.getNodeForId(val[0].column),
+                edgeInformation: val[1]
             }
-        }
+        });
     }
+}
