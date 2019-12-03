@@ -93,15 +93,16 @@ const nrFormatter = (() => {
 
 function Improvement({ lengthDiff, improvement, timeDiff, totalTimeDiff }: { totalTimeDiff: number, lengthDiff: number | undefined, improvement: ImprovementWithIndex, timeDiff: number | undefined }) {
   const pathStringVersion = improvement.path.map(v => v.name).join('-');
+  const lengthDiffClass = "length-difference" + (lengthDiff != undefined ? (lengthDiff > 0 ? ' positive' : ' negative') : '')
 
   return <div className="improvement" title={pathStringVersion}>
     <div className="index">{improvement.index}</div>
     <div className="total-time-diff">{nrFormatter(totalTimeDiff)}</div>
     <div className="time-difference">{timeDiff ? nrFormatter(timeDiff) : undefined}</div>
-    <div className="length-difference">{lengthDiff ? decNrFormatter(lengthDiff) : undefined}</div>
+    <div className={lengthDiffClass}>{lengthDiff ? decNrFormatter(Math.abs(lengthDiff)) : undefined}</div>
     <div className="length">{decNrFormatter(getPathLength(improvement.path))}</div>
     {/* <div className="path">{improvement.path.map((n, i) => <span key={i}>{n.name}</span>)}</div> */}
-  </div>
+  </div >
 }
 
 const viewBoxPadding = 10;

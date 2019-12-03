@@ -84,9 +84,6 @@ body {
   .time-difference,
   .total-time-diff {
     &:not(:empty) {
-      // &::before {
-      //   content: "+";
-      // }
       &::after {
         content: "ms";
         margin-left: 3px;
@@ -98,12 +95,24 @@ body {
   }
 
   .length-difference {
-    &:not(:empty) {
+    &.negative {
+      color: red;
+
+      &::before {
+        content: "-";
+      }
+    }
+
+    &.positive {
       color: green;
 
       &::before {
         content: "-";
       }
+    }
+
+    &::before {
+      margin-right: 3px;
     }
   }
   // margin
