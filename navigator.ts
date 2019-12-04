@@ -1,7 +1,8 @@
 (() => {
     const navTo = [
         ["./tsp.html", "Traveling Salesman Problem"],
-        ["./particleswarm.html", "Partikelschwarm optimierung"]
+        ["./particleswarm.html", "Partikelschwarm optimierung"],
+        ["./nn.html", "Neuronales Netzt"]
     ];
 
     const navElem = document.createElement('nav');
