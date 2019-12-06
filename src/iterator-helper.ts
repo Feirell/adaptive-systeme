@@ -1,8 +1,8 @@
-export interface IteratorAndIterable<T> extends Iterator<T, T>, Iterable<T> { }
+export interface IteratorAndIterable<T, TRet = T> extends Iterator<T, TRet>, Iterable<T> { }
 
-export function produceIteratorAndIterable<T>(fnc: Iterator<T>['next']): IteratorAndIterable<T> {
+export function produceIteratorAndIterable<T, TRet = T>(fnc: Iterator<T, TRet>['next']): IteratorAndIterable<T, TRet> {
   const ite = {
-    next: () => fnc(),
+    next: fnc,
     [Symbol.iterator]: () => ite
   };
 
