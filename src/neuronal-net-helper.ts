@@ -153,7 +153,7 @@ abstract class NeuronalNet {
   }
 
   trainWithDataSet(trainingSet: TrainingsSet, allowedTries: number = Infinity) {
-    let testingResult: number[][];
+    let testingResult: number[][] = [];
     let tries = 0;
 
     return produceIteratorAndIterable<LearningResult, 'resolved' | 'aborted'>(() => {
