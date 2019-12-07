@@ -60,13 +60,17 @@ export class WorkerHelper<Payload = any> {
         })
     }
 
-    async expectType(type: string) {
-        const msg = await this.waitForAnyMessage();
+    async expectType(type: string, throwOnUnexpected = false) {
+        while (true) {
+            const msg = await this.waitForAnyMessage();
 
-        if (msg.type != type)
-            throw new Error('received message with type ' + msg.type + ' which was not expected, expected was ' + type);
+            if (msg.type == type)
+                return msg;
 
-        return msg;
+            if (throwOnUnexpected)
+                throw new Error('received message with type ' + msg.type + ' which was not expected, expected was ' + type);
+        }
+
     }
 
     async waitForType(type: string) {

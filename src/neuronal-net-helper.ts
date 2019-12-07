@@ -52,6 +52,39 @@ class WeightMemory {
 
     return this.backing[this.outNumber * inIndex + outIndex] = val;
   }
+
+  getAsArray(): number[][] {
+    const ret = new Array(this.outNumber) as number[][];
+
+    for (let i = 0; i < this.outNumber; i++)
+      ret[i] = this.backing.slice(i * this.inNumber, (i + 1) * this.inNumber);
+
+    return ret;
+  }
+
+  setAsArray(weights: number[][], checkTypes = true) {
+    const newBacking = createArray(this.defaultWeight, this.inNumber * this.outNumber) as number[];
+
+    for (let outIndex = 0; outIndex < this.outNumber; outIndex++) {
+      const inArr = weights[outIndex];
+      if (checkTypes && !Array.isArray(inArr))
+        throw new TypeError('weights[' + outIndex + '] is not an array');
+
+      for (let inIndex = 0; inIndex < this.inNumber; inIndex++) {
+        const inValue = inArr[inIndex];
+        if (checkTypes && !Number.isFinite(inValue))
+          throw new Error('weights[' + outIndex + '][' + inIndex + '] is not an number');
+
+        newBacking[outIndex * this.outNumber + this.inNumber] = inValue;
+      }
+    }
+
+    (this as any).backing = newBacking;
+  }
+
+  toJSON() {
+    return this.getAsArray();
+  }
 }
 
 type TrainingsSet = [number[], number[]][];
@@ -60,6 +93,8 @@ interface LearningResult {
   testingResult: number[][];
   remainingTries: number;
 }
+
+type WeightsDefinition = number[][][];
 
 abstract class NeuronalNet {
 
@@ -73,19 +108,31 @@ abstract class NeuronalNet {
     if (layerDefinition.length < 2)
       throw new RangeError("layerDefinition need to have at least two layers (input and output layer)");
 
-    this.weights = [];
+    this.weights = new Array(layerDefinition.length - 1) as WeightMemory[];
 
     for (let i = 1; i < layerDefinition.length; i++) {
       const inNumber = layerDefinition[i - 1];
       const outNumber = layerDefinition[i];
 
       const wm = new WeightMemory(inNumber + 1, outNumber, defaultWeight);
-      this.weights.push(wm);
 
       // setting the threshold of the first negative
       for (let o = 0; o < outNumber; o++)
         wm.set(0, o, -defaultWeight);
+
+      this.weights[i - 1] = wm;
     }
+  }
+
+  getWeightsAsArray(): WeightsDefinition {
+    return this.weights.map(v => v.getAsArray());
+  }
+
+  setWeightsAsArray(weights: WeightsDefinition) {
+    if (this.weights.length != weights.length)
+      throw new RangeError('weights needs to be layerDefinition.length + 1 but was ' + weights.length);
+
+    this.weights.forEach((w, i) => w.setAsArray(weights[i]));
   }
 
   abstract activationFunction(accumulated: number): number;
@@ -153,20 +200,22 @@ abstract class NeuronalNet {
   }
 
   trainWithDataSet(trainingSet: TrainingsSet, allowedTries: number = Infinity) {
-    let testingResult: number[][] = [];
+    let testingResult: number[][] = undefined;
     let tries = 0;
 
     return produceIteratorAndIterable<LearningResult, 'resolved' | 'aborted'>(() => {
       let wasAtLeastOneWrong = false;
 
-      setLoop: for (const testResultSet of testingResult)
-        for (const testResultNodeResult of testResultSet)
-          if (testResultNodeResult > 0) {
-            wasAtLeastOneWrong = true;
-            break setLoop;
-          }
+      if (testingResult)
+        setLoop:
+        for (const testResultSet of testingResult)
+          for (const testResultNodeResult of testResultSet)
+            if (testResultNodeResult > 0) {
+              wasAtLeastOneWrong = true;
+              break setLoop;
+            }
 
-      if (!wasAtLeastOneWrong)
+      if (testingResult && !wasAtLeastOneWrong)
         return { done: true, value: 'resolved' };
 
       if (tries >= allowedTries)
@@ -190,6 +239,10 @@ abstract class NeuronalNet {
         return n.value;
     }
 
+  }
+
+  toJSON() {
+    return this.weights.map(weights => weights.toJSON());
   }
 }
 

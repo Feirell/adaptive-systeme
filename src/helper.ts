@@ -68,6 +68,28 @@ export function fisherYatesShuffle<T>(arr: T[], prng: PRNG) {
   return copy;
 }
 
+export function arrayEqual<T>(arrA: T[], arrB: T[], isEqual = (a: T, b: T) => a === b) {
+  if (!Array.isArray(arrA))
+    throw new TypeError('arrA is not an array');
+
+  if (!Array.isArray(arrB))
+    throw new TypeError('arrB is not an array');
+
+  if (arrA == arrB)
+    return true;
+
+  if (arrA.length != arrB.length)
+    return false;
+
+  const length = arrA.length;
+
+  for (let i = 0; i < length; i++)
+    if (!isEqual(arrA[i], arrB[i]))
+      return false;
+
+  return true;
+}
+
 export function pathEqual(pathA: TSPNode[], pathB: TSPNode[]) {
   if (pathA.length != pathB.length)
     return false;
