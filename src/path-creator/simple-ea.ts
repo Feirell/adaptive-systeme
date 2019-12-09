@@ -10,7 +10,7 @@ export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     protected createInitialPopulation(availableNodes: TSPNode[]): TSPIndividual[] {
         const arr = new Array(this.populationSize);
         for (let i = 0; i < this.populationSize; i++)
-            arr[i] = { phenotype: fisherYatesShuffle(availableNodes, this.prng) };
+            arr[i] = { genotype: fisherYatesShuffle(availableNodes, this.prng) };
 
         return arr;
     }
@@ -24,8 +24,8 @@ export class SimpleEA extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected mutate(individual: TSPIndividual): TSPIndividual {
-        let path = turnTwoAround(this.prng, individual.phenotype);
-        return { phenotype: path };
+        let path = turnTwoAround(this.prng, individual.genotype);
+        return { genotype: path };
     }
 
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {

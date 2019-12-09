@@ -8,7 +8,7 @@ abstract class EAWMutate extends EvolutionaryAlgorithm<TSPIndividual>{
         const arr = new Array(this.populationSize);
 
         for (let i = 0; i < this.populationSize; i++)
-            arr[i] = { phenotype: fisherYatesShuffle(availableNodes, this.prng) };
+            arr[i] = { genotype: fisherYatesShuffle(availableNodes, this.prng) };
 
         return arr;
     }
@@ -22,12 +22,12 @@ abstract class EAWMutate extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     protected mutate(individual: TSPIndividual): TSPIndividual {
-        let path = individual.phenotype;
+        let path = individual.genotype;
 
         for (let i = 0; i < this.mutationSize; i++)
             path = this.chooseRandomMutate()(this.prng, path);
 
-        return { phenotype: path };
+        return { genotype: path };
     }
 }
 

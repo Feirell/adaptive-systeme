@@ -7,7 +7,7 @@ export function recombineCopy<T extends TSPIndividual>(selected: T[]) {
 
     for (const parent of selected)
         (resulting as any).push({
-            phenotype: parent.phenotype.slice(0)
+            genotype: parent.genotype.slice(0)
         } as TSPIndividual);
 
     return resulting;
@@ -77,7 +77,7 @@ export function selectTournament<T extends TSPIndividual>(
 }
 
 export function recombineCrossXWMappingTSP<T extends TSPIndividual>(a: T, b: T, crossover: number[]): T[] {
-    return [{ phenotype: recombineCrossXWMapping(a.phenotype, b.phenotype, crossover) } as any as T];
+    return [{ genotype: recombineCrossXWMapping(a.genotype, b.genotype, crossover) } as any as T];
 }
 
 export function recombineCrossXWMapping<T>(a: T[], b: T[], crossover: number[], comparator: (a: T, b: T) => boolean = (a, b) => a == b) {

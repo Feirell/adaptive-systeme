@@ -3,15 +3,15 @@ import { PathCreator } from './path-creator';
 import { TSPNode } from '../tsp-node';
 
 export interface TSPIndividual {
-    phenotype: TSPNode[];
+    genotype: TSPNode[];
 }
 
 const individualCombination = (a: TSPIndividual, b: TSPIndividual) =>
-    pathCompare(a.phenotype, b.phenotype);
+    pathCompare(a.genotype, b.genotype);
 
 export const sortBest = <T extends TSPIndividual>(individuum: T[]) => Array.from(individuum).sort(individualCombination);
 
-// const isIndividuumBetter = (a: TSPIndividual, b: TSPIndividual) => isPathBetter(a.phenotype, b.phenotype);
+// const isIndividuumBetter = (a: TSPIndividual, b: TSPIndividual) => isPathBetter(a.genotype, b.genotype);
 
 const findBestIndividuum = (individuals: TSPIndividual[]) => {
     let best = individuals[0];
@@ -74,7 +74,7 @@ export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> ex
             this.population = this.environmentSelection(newPopulation);
         }
 
-        return findBestIndividuum(this.population).phenotype;
+        return findBestIndividuum(this.population).genotype;
     }
 
     protected abstract createInitialPopulation(availableNodes: TSPNode[]): Individual[];
