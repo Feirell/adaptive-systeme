@@ -1,0 +1,1 @@
+.neuronal-net-display .results{display:grid;width:min-content}.neuronal-net-display .results>*{width:25px;height:25px;border:1px solid grey}.neuronal-net-display .results .correct{background-color:#40bf40}.neuronal-net-display .results .wrong{background-color:#bf4055}
