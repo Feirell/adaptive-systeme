@@ -25,8 +25,8 @@ const drawFunction = (imageData: ImageData, fnc: (x: number, y: number) => numbe
             const scaledX = scale * (x - width * 0.5);
 
             const res = fnc(scaledX, scaledY);
-            // const resScaled = 1 - 1 / (1 + res * resScale);
-            const resScaled = res / max;
+            const resScaled = 1 - 1 / (1 + res * resScale);
+            // const resScaled = res / max;
 
             const start = (x * width + y) * 4;
             imageData.data[start + 0] = resScaled * 255;
