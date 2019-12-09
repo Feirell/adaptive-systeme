@@ -24,8 +24,9 @@ const findBestIndividuum = (individuals: TSPIndividual[]) => {
 }
 
 export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> extends PathCreator {
-    protected readonly populationSize = 10;
-    protected readonly childrenSize = clamp(Math.floor(this.populationSize * 0.5), 1);
+    protected readonly populationSize = 30;
+    protected readonly childrenSize = this.populationSize * 5;
+    // protected readonly childrenSize = clamp(Math.floor(this.populationSize * 0.5), 1);
     // protected readonly mutationSize = clamp(Math.floor(Math.log10(this.availableNodes.length)), 1, 3);
     protected readonly mutationSize = 1;
 
@@ -40,8 +41,10 @@ export abstract class EvolutionaryAlgorithm<Individual extends TSPIndividual> ex
 
         for (let tries = 0; tries < this.numberOfTries; tries++) {
             const current = this.doGeneration();
-            if (isPathBetter(current, this.lastBest))
+            if (isPathBetter(current, this.lastBest)) {
+                // console.log(this.constructor.processorName, tries);
                 return this.lastBest = current;
+            }
         }
 
         this.finished = true;

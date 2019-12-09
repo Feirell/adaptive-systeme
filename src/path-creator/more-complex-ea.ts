@@ -14,11 +14,13 @@ abstract class EAWMutate extends EvolutionaryAlgorithm<TSPIndividual>{
     }
 
     private chooseRandomMutate() {
-        switch (this.prng.randomInteger(0, 3)) {
-            case 0: return switchRandomTwo;
-            case 1: return shiftRandomRange;
-            case 2: return flipRandomSection;
-        }
+        // switch (this.prng.randomInteger(0, 3)) {
+        //     case 0: return switchRandomTwo;
+        //     case 1: return shiftRandomRange;
+        //     case 2: return flipRandomSection;
+        // }
+
+        return flipRandomSection;
     }
 
     protected mutate(individual: TSPIndividual): TSPIndividual {
@@ -33,6 +35,8 @@ abstract class EAWMutate extends EvolutionaryAlgorithm<TSPIndividual>{
 
 export class MoreComplexEA extends EAWMutate {
     public static readonly processorName = "EA with select best";
+    // zu kleine Kind Anzahl, deshalb tastet sich das an steady state ran!
+    // protected readonly childrenSize = this.populationSize * 5;
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
         return selectRandomX(individuals, this.childrenSize, this.prng).map(v => [v]);
@@ -50,6 +54,9 @@ export class MoreComplexEA extends EAWMutate {
 export class MoreComplexEAWRecomb extends EAWMutate {
     public static readonly processorName = "EA with recombination";
 
+    // zu kleine Kind Anzahl, deshalb tastet sich das an steady state ran!
+    // protected readonly childrenSize = this.populationSize * 5;
+
     protected readonly crossover = [
         this.availableNodes.length * 1 / 3 | 0,
         this.availableNodes.length * 2 / 3 | 0
@@ -57,10 +64,26 @@ export class MoreComplexEAWRecomb extends EAWMutate {
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
         return selectRandomPairsOf(individuals, this.childrenSize, 2, this.prng);
+        // const ts = (this.populationSize) * 0.4 | 0
+        // const selected = selectTournament(individuals, this.childrenSize * 2, this.prng, ts, 1, true);
+
+        // const ret = [];
+        // for (let i = 0; i < this.childrenSize; i++) {
+        //     ret.push(
+        //         selected[i * 2],
+        //         selected[i * 2 + 1]
+        //     );
+        // }
+
+        // return ret;
     }
 
     protected recombination(selected: TSPIndividual[]): TSPIndividual[] {
-        return recombineCrossXWMappingTSP(selected[0], selected[1], this.crossover);
+        const crossover = new Set();
+        for (let i = 0; i < 2; i++) {
+            crossover.add(this.prng.randomInteger(0, this.availableNodes.length));
+        }
+        return recombineCrossXWMappingTSP(selected[0], selected[1], Array.from(crossover.values()) as number[]);
     }
 
     protected environmentSelection(individuals: TSPIndividual[]): TSPIndividual[] {
@@ -71,19 +94,27 @@ export class MoreComplexEAWRecomb extends EAWMutate {
 export class MoreComplexEAWTournament extends EAWMutate {
     public static readonly processorName = "EA with tournament";
 
+    // zu kleine Kind Anzahl, deshalb tastet sich das an steady state ran!
+    // protected readonly childrenSize = this.populationSize * 5;
+
     protected readonly crossover = [
         this.availableNodes.length * 1 / 3 | 0,
         this.availableNodes.length * 2 / 3 | 0
     ];
 
-    protected getCurrentTournamentSize(strength = 0.05, individuals = this.populationSize) {
-        const numberOfProgressSteps = this.calls.length
-        const tournamentSizePerc = 1 - 1 / (strength * numberOfProgressSteps + 1);
-        return clamp(Math.floor(individuals * tournamentSizePerc), 2, individuals);
+    protected getCurrentTournamentSize(strength = 0.5, individuals = this.populationSize + this.childrenSize) {
+        // const numberOfProgressSteps = this.calls.length
+        const numberOfProgressSteps = 1;
+        // const tournamentSizePerc = 1 - 1 / (strength * numberOfProgressSteps + 1);
+        const tournamentSizePerc = 0.2;
+        // console.log(tournamentSizePerc);
+        const tournamentSize = clamp(Math.floor(individuals * tournamentSizePerc), 2, individuals);
+        // console.log('tournamentSize', tournamentSize);
+        return tournamentSize;
     }
 
     protected parentSelection(individuals: TSPIndividual[]): TSPIndividual[][] {
-        return selectBestXPairs(individuals, this.childrenSize);
+        return selectRandomPairsOf(individuals, this.childrenSize, 2, this.prng);
     }
 
     protected recombination(selected: TSPIndividual[]): TSPIndividual[] {

@@ -18,18 +18,41 @@ export function selectRandomX<T extends TSPIndividual>(individuals: T[], amount:
         .slice(0, amount);
 }
 
+// export function selectRandomPairsOf<T extends TSPIndividual>(individuals: T[], groups: number, groupSize: number, prng: PRNG) {
+//     if (groupSize * groups > individuals.length)
+//         throw new RangeError('requested ' + groups + ' with a length of ' + groupSize + ' results in needed ' + (groupSize * groups) + ' elements but only' + individuals.length + ' where given');
+
+//     const shuffled = fisherYatesShuffle(individuals, prng);
+
+//     const ret = new Array(groups);
+
+//     for (let group = 0; group < groups; group++)
+//         ret[group] = shuffled.slice(group * groupSize, (group + 1) * groupSize);
+
+//     return ret;
+// }
+
 export function selectRandomPairsOf<T extends TSPIndividual>(individuals: T[], groups: number, groupSize: number, prng: PRNG) {
-    if (groupSize * groups > individuals.length)
-        throw new RangeError('requested ' + groups + ' with a length of ' + groupSize + ' results in needed ' + (groupSize * groups) + ' elements but only' + individuals.length + ' where given');
+    // console.log('selectBestXPairs')
+    const pairs = [];
 
-    const shuffled = fisherYatesShuffle(individuals, prng);
+    if (groupSize != 2)
+        throw new RangeError('not supporting group size != 2');
 
-    const ret = new Array(groups);
+    for (let group = 0; group < groups; group++) {
+        const a = prng.randomInteger(0, individuals.length);
+        const b = prng.randomIntegerExcept(0, individuals.length, a);
+        // console.log(a, b);
+        pairs.push([individuals[a], individuals[b]])
+    }
+    // const shuffled = fisherYatesShuffle(individuals, prng);
 
-    for (let group = 0; group < groups; group++)
-        ret[group] = shuffled.slice(group * groupSize, (group + 1) * groupSize);
+    // const ret = new Array(groups);
 
-    return ret;
+    // for (let group = 0; group < groups; group++)
+    //     ret[group] = shuffled.slice(group * groupSize, (group + 1) * groupSize);
+    // console.log(pairs);
+    return pairs;
 }
 
 export function selectBestX<T extends TSPIndividual>(individuals: T[], amount: number) {
@@ -37,33 +60,24 @@ export function selectBestX<T extends TSPIndividual>(individuals: T[], amount: n
         .slice(0, amount)
 }
 
-export function selectBestXPairs<T extends TSPIndividual>(individuals: T[], amount: number) {
-    const selected = selectBestX(individuals, amount * 2);
-    // const selected = selectTournament(individuals, amount * 2, this.prng, this.getCurrentTournamentSize(), 1);
-
-    const pairs: TSPIndividual[][] = new Array(amount);
-
-    for (let i = 0; i < amount; i++)
-        pairs[i] = selected.slice(i * 2, i * 2 + 2);
-
-    return pairs;
-}
-
 export function selectTournament<T extends TSPIndividual>(
     individuals: T[],
     amount: number,
     prng: PRNG,
-    tournamentSize: number = clamp(individuals.length * 0.1, 1, Infinity),
+    tournamentSize: number = individuals.length * 0.1,
     tournamentWinner: number = 1,
-    reuse = false
+    reuse = true
 ) {
+    if (!reuse && amount > individuals.length)
+        throw new Error('can not not reuse and get more than individuals as are present');
+
     tournamentSize = Math.round(tournamentSize);
+    tournamentSize = clamp(tournamentSize, 1, Infinity);
 
     let ret: T[] = [];
 
-    individuals = fisherYatesShuffle(individuals, prng);
-
     while (ret.length < amount) {
+        individuals = fisherYatesShuffle(individuals, prng);
         const winner = selectBestX(individuals.slice(0, tournamentSize), tournamentWinner);
 
         ret = ret.concat(winner);
