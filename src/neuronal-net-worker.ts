@@ -18,7 +18,7 @@ const wh = new WorkerHelper();
     (async () => {
         while (true) {
             const trainMessage = await wh.waitForType('train-set');
-            const { trainingsSet, allowedTries = Infinity } = trainMessage.payload;
+            const { trainingsSet, allowedTries = Infinity, awaitContinue = false } = trainMessage.payload;
 
             const training = instance.trainWithDataSet(trainingsSet, allowedTries);
 
@@ -28,8 +28,11 @@ const wh = new WorkerHelper();
                 if (n.done) {
                     wh.sendMessage('training-finished', { trainingResult: n.value });
                     break;
-                } else
+                } else {
                     wh.sendMessage('training-progressed', { intermediateResult: n.value });
+                    if (awaitContinue)
+                        await wh.waitForType('training-continue');
+                }
             }
         }
     })();

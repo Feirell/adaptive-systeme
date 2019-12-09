@@ -1,0 +1,21 @@
+.neuronal-net-display {
+    .results {
+        display: grid;
+        width: min-content;
+
+        > * {
+            width: 25px;
+            height: 25px;
+
+            border: 1px solid grey;
+        }
+
+        .correct {
+            background-color: hsl(120, 50%, 50%);
+        }
+
+        .wrong {
+            background-color: hsl(350, 50%, 50%);
+        }
+    }
+}

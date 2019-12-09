@@ -90,7 +90,7 @@ class WeightMemory {
 type TrainingsSet = [number[], number[]][];
 
 interface LearningResult {
-  testingResult: number[][];
+  testingResult: boolean[][];
   remainingTries: number;
 }
 
@@ -162,7 +162,7 @@ abstract class NeuronalNet {
   }
 
   supervisedOnlineLearning(trainingSet: TrainingsSet) {
-    const testingResult = createArray(0, trainingSet.length, trainingSet[1].length) as number[][];
+    const testingResult = createArray(true, trainingSet.length, trainingSet[0][1].length) as boolean[][];
 
     if (this.layerDefinition.length > 2)
       throw new RangeError('can not learn for hidden layers');
@@ -185,7 +185,7 @@ abstract class NeuronalNet {
 
         // if this part of the vector is not correct, recalibrate the weight
         if (actual != expected) {
-          testingResult[i][k]++;
+          testingResult[i][k] = false;
 
           for (let w = 0; w < currentWeight.inNumber; w++) {
             const input = w == 0 ? 1 : currentInput[w - 1];
@@ -200,7 +200,7 @@ abstract class NeuronalNet {
   }
 
   trainWithDataSet(trainingSet: TrainingsSet, allowedTries: number = Infinity) {
-    let testingResult: number[][] = undefined;
+    let testingResult: boolean[][] = undefined;
     let tries = 0;
 
     return produceIteratorAndIterable<LearningResult, 'resolved' | 'aborted'>(() => {
@@ -210,7 +210,7 @@ abstract class NeuronalNet {
         setLoop:
         for (const testResultSet of testingResult)
           for (const testResultNodeResult of testResultSet)
-            if (testResultNodeResult > 0) {
+            if (!testResultNodeResult) {
               wasAtLeastOneWrong = true;
               break setLoop;
             }
