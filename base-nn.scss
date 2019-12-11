@@ -18,4 +18,11 @@
             background-color: hsl(350, 50%, 50%);
         }
     }
+
+    svg {
+        circle {
+            fill: black;
+            stroke: grey;
+        }
+    }
 }

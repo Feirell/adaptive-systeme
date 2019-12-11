@@ -225,7 +225,7 @@ abstract class NeuronalNet {
 
       tries++;
 
-      return { done: false, value: { testingResult, remainingTries: allowedTries - tries, net: this.toJSON() } };
+      return { done: false, value: { testingResult, remainingTries: allowedTries - tries } };
     });
   }
 

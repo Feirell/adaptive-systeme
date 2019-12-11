@@ -96,16 +96,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   wh.sendMessage('train-set', { trainingsSet, awaitContinue });
 
   while (true) {
-    const msg = await wh.waitForAnyMessage();
+    const { type, payload } = await wh.waitForAnyMessage();
 
-    if (msg.type == 'training-finished') {
-      console.log('finished because ' + msg.payload.trainingResult);
+    net = payload.net;
+    console.log('net', net);
+    if (type == 'training-finished') {
+      console.log('finished because ' + payload.trainingResult);
       break;
-    } else if (msg.type == 'training-progressed') {
-      const { testingResult, net: newNet } = msg.payload.intermediateResult;
-
-      net = newNet;
-      trainingErrorResult = testingResult;
+    } else if (type == 'training-progressed') {
+      trainingErrorResult = payload.intermediateResult.testingResult;
 
       render.shouldRender();
       console.log('progressed training', trainingErrorResult);
