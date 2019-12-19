@@ -1,4 +1,4 @@
-import { NeuronalNetSimple } from './neuronal-net-helper';
+import { NeuronalNetSimple } from './neuronal-net';
 import { WorkerHelper } from './worker-helper'
 
 const wh = new WorkerHelper();
@@ -24,12 +24,14 @@ const wh = new WorkerHelper();
 
             while (true) {
                 const n = training.next();
+                const net = instance.toJSON();
+                console.log('added net', net);
 
                 if (n.done) {
-                    wh.sendMessage('training-finished', { trainingResult: n.value });
+                    wh.sendMessage('training-finished', { trainingResult: n.value, net });
                     break;
                 } else {
-                    wh.sendMessage('training-progressed', { intermediateResult: n.value });
+                    wh.sendMessage('training-progressed', { intermediateResult: n.value, net });
                     if (awaitContinue)
                         await wh.waitForType('training-continue');
                 }

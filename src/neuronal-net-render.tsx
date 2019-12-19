@@ -29,10 +29,9 @@ function TestResult({ trainingErrorResult, columns = 15 }: { trainingErrorResult
 }
 
 function Net({ net }: { net: WeightDefinition }) {
-  if (net.length < 2)
+  if (net.length < 1)
     return <span>Can not render net with one or none layer</span>
 
-  console.log('net', net)
   const nodeDiameter = 10;
   const nodeMargin = 5;
   const layerMargin = 20;
@@ -66,7 +65,7 @@ function Net({ net }: { net: WeightDefinition }) {
       const center = getNodeCenter(layer, node, width);
 
       const customData = { 'data-layer': layer, 'data-node': node };
-      ret.push(<circle key={layer + '-' + node} cx={center.cx} cy={center.cy} {...customData} />);
+      ret.push(<circle key={layer + '-' + node} cx={center.cx} cy={center.cy} r={nodeDiameter / 2} {...customData} />);
     }
   }
   // for (let i = 0)
