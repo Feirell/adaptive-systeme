@@ -10,15 +10,15 @@ type InitialPositions = Particle['position'][];
 
 export class Particleswarm {
     // inertia
-    w: number = 0.5;
+    w: number = 0.6;
 
     // acceleration
-    c_l: number = 0.5;
-    c_g: number = 0.5;
+    c_l: number = 0.25;
+    c_g: number = 0.75;
 
     // stochastic
-    r_l: number = 0.5;
-    r_g: number = 0.5;
+    r_l: number = 0.25;
+    r_g: number = 0.75;
 
     particles: Particle[];
 

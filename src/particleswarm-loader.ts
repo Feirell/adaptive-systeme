@@ -1,13 +1,17 @@
-import { PRNG } from './prng';
-import { Particleswarm, Particle } from "./particleswarm";
+import {PRNG} from './prng';
+import {Particle, Particleswarm} from "./particleswarm";
 
-const functionToBeInvestigate = (x: number, y: number) => (1 - x) ** 2 + 100 * (y - x ** 2) ** 2;
+// const functionToBeInvestigate = (x: number, y: number) => (1 - x) ** 2 + 100 * (y - x ** 2) ** 2;
+const functionToBeInvestigate = (x: number, y: number) => Math.sqrt(x ** 2 + y ** 2) / 100 + (Math.cos(x / 10) * Math.cos(y / 10));
+
+(window as any).fnc = functionToBeInvestigate;
 
 const drawFunction = (imageData: ImageData, fnc: (x: number, y: number) => number, scale: number, resScale: number) => {
     const height = imageData.height;
     const width = imageData.width;
 
     let max = fnc(0, 0);
+    let min = max;
 
     for (let x = 0; x < width; x++)
         for (let y = 0; y < height; y++) {
@@ -17,6 +21,8 @@ const drawFunction = (imageData: ImageData, fnc: (x: number, y: number) => numbe
             const c = fnc(scaledX, scaledY);
             if (c > max)
                 max = c;
+            if (c < min)
+                min = c;
         }
 
     for (let x = 0; x < width; x++)
@@ -25,8 +31,9 @@ const drawFunction = (imageData: ImageData, fnc: (x: number, y: number) => numbe
             const scaledX = scale * (x - width * 0.5);
 
             const res = fnc(scaledX, scaledY);
-            const resScaled = 1 - 1 / (1 + res * resScale);
-            // const resScaled = res / max;
+            // const resScaled = 1 - 1 / (1 + res * resScale);
+            // const resScaled = Math.floor((res - min) / (max - min) * 4) / 3;
+            const resScaled = (res - min) / (max - min);
 
             const start = (x * width + y) * 4;
             imageData.data[start + 0] = resScaled * 255;
@@ -75,7 +82,7 @@ const drawParticles = (imageData: ImageData, particles: Particle[], scale: numbe
 }
 
 const nrFrmt = (() =>
-    new Intl.NumberFormat('en', { maximumFractionDigits: 2, minimumFractionDigits: 2 }).format
+        new Intl.NumberFormat('en', {maximumFractionDigits: 4, minimumFractionDigits: 4}).format
 )()
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -99,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const initialPosition = [];
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 20; i++) {
         initialPosition.push([
             (prng.nextFloat() - 0.5) * width,
             (prng.nextFloat() - 0.5) * height
@@ -112,22 +119,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const copy = imageData.data.slice(0);
 
-    const stopChangeWhenDeltaLess = 5;
+    const stopChangeWhenDeltaLess = 1e-4;
     let cycleStep = 0;
 
+    let prevBestVal: undefined | number = undefined;
     const doCycle = () => {
         imageData.data.set(copy);
 
         const spreadChange = ps.updateParticles();
         context.putImageData(drawParticles(imageData, ps.particles, scale), 0, 0);
 
-        const bestGlobalPrintable = '(' + ps.calculateBestGlobal(ps.particles).map(nrFrmt).join(', ') + ')';
+        const best = ps.calculateBestGlobal(ps.particles);
+        const bestGlobalPrintable = '(' + best.map(nrFrmt).join(', ') + ')';
 
         cycleStep++;
 
         const generalPrint = 'Step: ' + cycleStep + ' best is ' + bestGlobalPrintable + ' we changed spread by ' + nrFrmt(spreadChange);
 
-        if (Math.abs(spreadChange) < stopChangeWhenDeltaLess) {
+        if (Math.abs(spreadChange) < 1e-4) {
             console.log('%cFINISHED%c ' + generalPrint + ' break update cycle since we reached a spread change under ' + stopChangeWhenDeltaLess, 'color: lightgreen', 'color:unset');
             clearInterval(interval);
         } else {
